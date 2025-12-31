@@ -21,7 +21,9 @@ def main() -> None:
 @click.option("--output-dir", "-o", type=click.Path(path_type=Path), help="Output directory")
 @click.option("--report", "-r", type=click.Path(path_type=Path), help="Migration report path")
 @click.option("--validate/--no-validate", default=True, help="Validate with vector")
-@click.option("--verbose", is_flag=True, help="Verbose output")
+@click.option("--verbose", "-v", is_flag=True, help="Verbose output")
+@click.option("--quiet", "-q", is_flag=True, help="Minimal output")
+@click.option("--overwrite", "-f", is_flag=True, help="Overwrite existing files without confirmation")
 def migrate(
     directory: Path,
     dry_run: bool,
@@ -29,33 +31,77 @@ def migrate(
     report: Path | None,
     validate: bool,
     verbose: bool,
+    quiet: bool,
+    overwrite: bool,
 ) -> None:
     """Migrate Logstash configs to Vector format."""
+    import os
+
     from rich.table import Table
 
     from lv_py.api import migrate_directory
 
-    console.print(f"[bold cyan]Logstash to Vector Migration Tool[/bold cyan]")
-    console.print(f"Source directory: [yellow]{directory}[/yellow]")
-    console.print(f"Mode: [yellow]{'DRY RUN' if dry_run else 'LIVE'}[/yellow]")
-    console.print()
+    # Handle quiet vs verbose modes
+    if quiet and verbose:
+        console.print("[red]Error:[/red] Cannot use both --quiet and --verbose")
+        raise SystemExit(1)
+
+    # Note: LV_PY_LOG_LEVEL environment variable can be used for logging
+    # For future logging implementation
+
+    if not quiet:
+        console.print("[bold cyan]Logstash to Vector Migration Tool[/bold cyan]")
+        console.print(f"Source directory: [yellow]{directory}[/yellow]")
+        console.print(f"Mode: [yellow]{'DRY RUN' if dry_run else 'LIVE'}[/yellow]")
+        console.print()
+
+    # Check for directory existence and permissions
+    if not directory.exists():
+        console.print(f"[red]Error:[/red] Directory not found: {directory}")
+        raise SystemExit(1)
+
+    if not directory.is_dir():
+        console.print(f"[red]Error:[/red] Path is not a directory: {directory}")
+        raise SystemExit(1)
+
+    if not os.access(directory, os.R_OK):
+        console.print(f"[red]Error:[/red] Permission denied: {directory}")
+        raise SystemExit(1)
 
     # Perform migration
     try:
-        result = migrate_directory(directory=directory, output_dir=output_dir, dry_run=dry_run)
+        result = migrate_directory(
+            directory=directory,
+            output_dir=output_dir,
+            dry_run=dry_run,
+            overwrite=overwrite,
+            validate=validate,
+            verbose=verbose
+        )
     except ValueError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise SystemExit(1)
+    except PermissionError as e:
+        console.print(f"[red]Permission denied:[/red] {e}")
+        raise SystemExit(1)
+    except Exception as e:
+        console.print(f"[red]Unexpected error:[/red] {e}")
+        if verbose:
+            import traceback
+            console.print(traceback.format_exc())
+        raise SystemExit(1)
 
     if result.total_files == 0:
-        console.print("[yellow]No .conf files found in directory[/yellow]")
+        if not quiet:
+            console.print("[yellow]No .conf files found in directory[/yellow]")
         return
 
-    console.print(f"Found [green]{result.total_files}[/green] configuration file(s)")
-    console.print()
+    if not quiet:
+        console.print(f"Found [green]{result.total_files}[/green] configuration file(s)")
+        console.print()
 
     # Display results based on mode
-    if dry_run:
+    if dry_run and not quiet:
         # Dry-run mode: show preview
         console.print("[bold cyan]Migration Preview[/bold cyan]")
         console.print()
@@ -65,7 +111,7 @@ def migrate(
             console.print(f"  Estimated size: {preview.estimated_size} bytes")
 
             if preview.transformations:
-                console.print(f"  Transformations:")
+                console.print("  Transformations:")
                 for transform in preview.transformations:
                     console.print(f"    • {transform.logstash_plugin} → {transform.vector_component}")
                     if transform.notes:
@@ -89,7 +135,7 @@ def migrate(
         console.print()
         console.print("[cyan]Run without --dry-run to write files[/cyan]")
 
-    else:
+    elif not quiet:
         # Live mode: show summary
         console.print("[bold]Migration Summary[/bold]")
 
@@ -99,16 +145,17 @@ def migrate(
         summary_table.add_row("[red]Failed[/red]", str(result.failed))
         console.print(summary_table)
 
-        # Write combined migration report
-        if report or result.reports:
-            report_path = report or directory / "migration-report.md"
+    # Write combined migration report (even in quiet mode)
+    if not dry_run and (report or result.reports):
+        report_path = report or directory / "migration-report.md"
 
-            combined_report_lines = ["# Combined Migration Report\n"]
-            for migration_report in result.reports:
-                combined_report_lines.append(migration_report.to_markdown())
-                combined_report_lines.append("\n---\n")
+        combined_report_lines = ["# Combined Migration Report\n"]
+        for migration_report in result.reports:
+            combined_report_lines.append(migration_report.to_markdown())
+            combined_report_lines.append("\n---\n")
 
-            report_path.write_text("\n".join(combined_report_lines))
+        report_path.write_text("\n".join(combined_report_lines))
+        if not quiet:
             console.print(f"\n[cyan]Migration report:[/cyan] {report_path}")
 
     # Exit with appropriate code

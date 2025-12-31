@@ -2,14 +2,14 @@
 
 from typing import Any
 
-from lv_py.models import PluginType, ComponentType
+from lv_py.models import ComponentType, PluginType
 from lv_py.models.logstash_config import LogstashConfiguration, LogstashPlugin
-from lv_py.models.vector_config import VectorConfiguration, VectorComponent
 from lv_py.models.migration_report import (
     MigrationReport,
     PluginMigration,
     UnsupportedPlugin,
 )
+from lv_py.models.vector_config import VectorComponent, VectorConfiguration
 from lv_py.transformers.base import BaseTransformer
 from lv_py.transformers.filters import (
     DateFilterTransformer,
@@ -151,10 +151,10 @@ def transform_config(
                 inputs=[],
                 comments=[
                     f"TODO: Manual migration required for unsupported plugin '{plugin.plugin_name}' (input)",
-                    f"Original Logstash configuration:",
+                    "Original Logstash configuration:",
                     f"  {plugin.plugin_name} {{",
                     *[f"    {line}" for line in _format_plugin_config(plugin).split("\n")],
-                    f"  }}",
+                    "  }",
                     "",
                     "Vector alternatives to consider:",
                     *[f"  - {alt}" for alt in alternatives],
@@ -214,10 +214,10 @@ def transform_config(
                 inputs=source_ids + transform_ids,
                 comments=[
                     f"TODO: Manual migration required for unsupported plugin '{plugin.plugin_name}' (filter)",
-                    f"Original Logstash configuration:",
+                    "Original Logstash configuration:",
                     f"  {plugin.plugin_name} {{",
                     *[f"    {line}" for line in _format_plugin_config(plugin).split("\n")],
-                    f"  }}",
+                    "  }",
                     "",
                     "Vector alternatives to consider:",
                     *[f"  - {alt}" for alt in alternatives],
@@ -276,10 +276,10 @@ def transform_config(
                 inputs=transform_ids if transform_ids else source_ids,
                 comments=[
                     f"TODO: Manual migration required for unsupported plugin '{plugin.plugin_name}' (output)",
-                    f"Original Logstash configuration:",
+                    "Original Logstash configuration:",
                     f"  {plugin.plugin_name} {{",
                     *[f"    {line}" for line in _format_plugin_config(plugin).split("\n")],
-                    f"  }}",
+                    "  }",
                     "",
                     "Vector alternatives to consider:",
                     *[f"  - {alt}" for alt in alternatives],

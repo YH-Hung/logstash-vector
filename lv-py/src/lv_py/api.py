@@ -21,6 +21,9 @@ def migrate_directory(
     directory: Path,
     output_dir: Path | None = None,
     dry_run: bool = False,
+    overwrite: bool = False,
+    validate: bool = True,
+    verbose: bool = False,
 ) -> MigrationResult:
     """
     Migrate all Logstash configs in a directory to Vector format.
@@ -29,6 +32,9 @@ def migrate_directory(
         directory: Directory containing .conf files
         output_dir: Optional output directory (defaults to same as input)
         dry_run: If True, only preview without writing files
+        overwrite: If True, overwrite existing files without confirmation
+        validate: If True, validate generated configs with vector
+        verbose: If True, show detailed progress information
 
     Returns:
         MigrationResult with previews or reports depending on mode
@@ -47,6 +53,13 @@ def migrate_directory(
             output_path = output_dir / conf_file.with_suffix(".toml").name
         else:
             output_path = conf_file.with_suffix(".toml")
+
+        # Check for existing files and prompt for overwrite if needed
+        if not dry_run and output_path.exists() and not overwrite:
+            from rich.prompt import Confirm
+            if not Confirm.ask(f"File {output_path} already exists. Overwrite?", default=False):
+                result.failed += 1
+                continue
 
         if dry_run:
             # Dry-run mode: create preview
@@ -99,11 +112,34 @@ def migrate_directory(
                     # Write TOML file
                     toml_content = vector_config.to_toml()
                     output_path.write_text(toml_content)
-                    result.successful += 1
+
+                    # Validate if requested
+                    if validate:
+                        is_valid, error_msg = validate_vector_config(output_path)
+                        if not is_valid:
+                            # Add validation error to report
+                            from lv_py.models.migration_report import ErrorType, MigrationError
+                            validation_error = MigrationError(
+                                error_type=ErrorType.VALIDATION_ERROR,
+                                message=f"Vector validation failed: {error_msg}",
+                                file_path=output_path,
+                                line_number=None,
+                                details=error_msg
+                            )
+                            migration_report.errors.append(validation_error)
+                            result.failed += 1
+                        else:
+                            result.successful += 1
+                    else:
+                        result.successful += 1
                 else:
                     result.failed += 1
 
-            except Exception:
+            except Exception as e:
+                if verbose:
+                    import traceback
+                    print(f"Error migrating {conf_file}: {e}")
+                    traceback.print_exc()
                 result.failed += 1
 
     return result

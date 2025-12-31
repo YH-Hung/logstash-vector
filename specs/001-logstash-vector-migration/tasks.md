@@ -334,44 +334,44 @@ All paths are relative to `lv-py/` directory (Constitution Principle II: Multi-S
 
 ### Edge Case Handling
 
-- [ ] T162 [P] Add handling for .conf files with non-Logstash content (ignore gracefully)
-- [ ] T163 [P] Add overwrite confirmation prompt in lv-py/src/lv_py/cli.py
-- [ ] T164 [P] Implement --overwrite/-f flag to skip confirmation
-- [ ] T165 [P] Add syntax error handling for malformed Logstash configs (FR-013)
-- [ ] T166 [P] Add progress indicators for large files (>1000 lines)
-- [ ] T167 [P] Add environment variable detection and flagging
-- [ ] T168 [P] Add conditional statement detection and flagging
-- [ ] T169 [P] Add directory not found error handling
-- [ ] T170 [P] Add permission denied error handling
-- [ ] T171 [P] Add multi-pipeline config detection and handling
+- [X] T162 [P] Add handling for .conf files with non-Logstash content (ignore gracefully)
+- [X] T163 [P] Add overwrite confirmation prompt in lv-py/src/lv_py/cli.py
+- [X] T164 [P] Implement --overwrite/-f flag to skip confirmation
+- [X] T165 [P] Add syntax error handling for malformed Logstash configs (FR-013)
+- [X] T166 [P] Add progress indicators for large files (>1000 lines)
+- [X] T167 [P] Add environment variable detection and flagging
+- [X] T168 [P] Add conditional statement detection and flagging
+- [X] T169 [P] Add directory not found error handling
+- [X] T170 [P] Add permission denied error handling
+- [X] T171 [P] Add multi-pipeline config detection and handling
 
 ### Additional CLI Features
 
-- [ ] T172 [P] Implement --output-dir flag for custom output directory
-- [ ] T173 [P] Implement --verbose flag for detailed logging
-- [ ] T174 [P] Implement --quiet flag for minimal output
-- [ ] T175 [P] Implement version command
-- [ ] T176 [P] Add --no-validate flag to skip Vector validation (faster)
-- [ ] T177 [P] Add environment variable LV_PY_LOG_LEVEL support
-- [ ] T178 [P] Add environment variable VECTOR_BIN support for custom Vector path
+- [X] T172 [P] Implement --output-dir flag for custom output directory
+- [X] T173 [P] Implement --verbose flag for detailed logging
+- [X] T174 [P] Implement --quiet flag for minimal output
+- [X] T175 [P] Implement version command
+- [X] T176 [P] Add --no-validate flag to skip Vector validation (faster)
+- [X] T177 [P] Add environment variable LV_PY_LOG_LEVEL support
+- [X] T178 [P] Add environment variable VECTOR_BIN support for custom Vector path
 
 ### Error Messages and UX
 
-- [ ] T179 [P] Review all error messages for clarity (SC-007)
-- [ ] T180 [P] Add helpful suggestions to error messages
-- [ ] T181 [P] Ensure all errors include file:line references where applicable
-- [ ] T182 [P] Add color-coded output (errors=red, warnings=yellow, success=green)
+- [X] T179 [P] Review all error messages for clarity (SC-007)
+- [X] T180 [P] Add helpful suggestions to error messages
+- [X] T181 [P] Ensure all errors include file:line references where applicable
+- [X] T182 [P] Add color-coded output (errors=red, warnings=yellow, success=green)
 
 ### Performance Optimization
 
-- [ ] T183 [P] Profile parser performance with 50 config files
-- [ ] T184 [P] Optimize pyparsing grammar if needed
-- [ ] T185 [P] Add parallel file processing if performance target not met
-- [ ] T186 [P] Verify SC-001 (under 2 minutes for 50 configs) and SC-006 (no degradation)
+- [X] T183 [P] Profile parser performance with 50 config files
+- [X] T184 [P] Optimize pyparsing grammar if needed
+- [X] T185 [P] Add parallel file processing if performance target not met
+- [X] T186 [P] Verify SC-001 (under 2 minutes for 50 configs) and SC-006 (no degradation)
 
 ### Documentation
 
-- [ ] T187 [P] Update README.md with complete usage examples
+- [X] T187 [P] Update README.md with complete usage examples
 - [ ] T188 [P] Add CONTRIBUTING.md with development guidelines
 - [ ] T189 [P] Add examples directory with sample Logstash configs
 - [ ] T190 [P] Document all CLI commands with --help text
@@ -379,22 +379,22 @@ All paths are relative to `lv-py/` directory (Constitution Principle II: Multi-S
 
 ### Final Integration Testing
 
-- [ ] T192 Run full test suite (unit + integration) via `uv run pytest --cov=lv_py --cov-report=html`
-- [ ] T193 Verify unit test coverage ≥80% (Constitution requirement)
-- [ ] T194 Verify integration test coverage 100% of supported features
-- [ ] T195 Run linting via `uv run ruff check .`
-- [ ] T196 Run type checking via `uv run mypy src/lv_py`
-- [ ] T197 Fix any linting or type errors
-- [ ] T198 Run performance test with 50 configs and verify SC-001, SC-006
-- [ ] T199 Verify all success criteria (SC-001 through SC-007) are met
+- [X] T192 Run full test suite (unit + integration) via `uv run pytest --cov=lv_py --cov-report=html`
+- [X] T193 Verify unit test coverage ≥80% (Constitution requirement) - Achieved 80.54%
+- [X] T194 Verify integration test coverage 100% of supported features
+- [X] T195 Run linting via `uv run ruff check .`
+- [X] T196 Run type checking via `uv run mypy src/lv_py`
+- [X] T197 Fix any linting or type errors
+- [X] T198 Run performance test with 50 configs and verify SC-001, SC-006
+- [X] T199 Verify all success criteria (SC-001 through SC-007) are met
 
 ### Release Preparation
 
-- [ ] T200 Create CHANGELOG.md with v0.1.0 features
-- [ ] T201 Update version in pyproject.toml to 0.1.0
-- [ ] T202 Build package with `uv build`
-- [ ] T203 Test installation in clean environment
-- [ ] T204 Create git tag v0.1.0
+- [X] T200 Create CHANGELOG.md with v0.1.0 features
+- [X] T201 Update version in pyproject.toml to 0.1.0
+- [X] T202 Build package with `uv build`
+- [X] T203 Test installation in clean environment
+- [X] T204 Create git tag v0.1.0
 
 ---
 

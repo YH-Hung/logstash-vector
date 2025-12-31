@@ -5,20 +5,16 @@ from typing import Any
 
 import pyparsing as pp
 from pyparsing import (
-    CaselessKeyword,
     Group,
     Keyword,
     OneOrMore,
     Optional,
     QuotedString,
-    StringEnd,
-    StringStart,
     Suppress,
     Word,
     ZeroOrMore,
     alphanums,
     alphas,
-    line,
     lineno,
     nums,
     pythonStyleComment,

@@ -9,8 +9,6 @@ Tests verify:
 
 from pathlib import Path
 
-import pytest
-
 
 class TestDryRunMode:
     """Test dry-run mode functionality."""

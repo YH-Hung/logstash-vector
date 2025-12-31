@@ -1,6 +1,7 @@
 """Unit tests for TOML generator."""
 
 from pathlib import Path
+
 import tomlkit
 
 from lv_py.generator.toml_generator import generate_toml
@@ -9,8 +10,8 @@ from lv_py.models.vector_config import VectorConfiguration
 
 def test_generate_empty_config():
     """Test generating TOML from minimal configuration."""
-    from lv_py.models.vector_config import VectorComponent
     from lv_py.models import ComponentType
+    from lv_py.models.vector_config import VectorComponent
 
     # Create minimal valid components instead of None
     config = VectorConfiguration(
@@ -66,8 +67,8 @@ def test_generate_sink_component():
 
 def test_generate_component_with_comments():
     """Test generating TOML with TODO comments (T128)."""
-    from lv_py.models.vector_config import VectorComponent
     from lv_py.models import ComponentType
+    from lv_py.models.vector_config import VectorComponent
 
     # Create component with TODO markers
     config = VectorConfiguration(

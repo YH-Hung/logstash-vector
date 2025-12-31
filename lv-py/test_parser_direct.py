@@ -2,6 +2,7 @@
 """Test parser directly."""
 
 from pathlib import Path
+
 from lv_py.parser.logstash_parser import parse_file
 
 test_file = Path("../test-configs/simple-pipeline.conf")

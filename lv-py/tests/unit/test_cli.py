@@ -45,7 +45,6 @@ def test_migrate_missing_directory(runner):
 
 def test_migrate_dry_run(runner, tmp_path):
     """Test migrate command with --dry-run flag."""
-    from pathlib import Path
 
     # Create a test directory with a sample .conf file
     test_dir = tmp_path / "test_configs"

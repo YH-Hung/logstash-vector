@@ -242,7 +242,7 @@ class DiffResult(BaseModel):
             lines.append("Unsupported Features:")
             for unsupported in self.unsupported_features:
                 lines.append(f"  ⚠ {unsupported.plugin_name} (line {unsupported.line_number})")
-                lines.append(f"    [UNSUPPORTED] Manual TODO added in Vector config")
+                lines.append("    [UNSUPPORTED] Manual TODO added in Vector config")
             lines.append("")
 
         lines.append("Summary:")

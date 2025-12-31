@@ -3,7 +3,7 @@
 from datetime import datetime
 from pathlib import Path
 
-from lv_py.models.logstash_config import LogstashConfiguration
+from lv_py.models import ErrorType
 from lv_py.models.migration_report import (
     MigrationError,
     MigrationReport,
@@ -11,7 +11,6 @@ from lv_py.models.migration_report import (
     UnsupportedPlugin,
 )
 from lv_py.models.vector_config import VectorComponent, VectorConfiguration
-from lv_py.models import ComponentType, ErrorType
 from lv_py.parser.logstash_parser import parse_file
 from lv_py.transformers import get_transformer
 

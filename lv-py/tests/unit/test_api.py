@@ -1,12 +1,10 @@
 """Unit tests for API functions."""
 
-import pytest
-from pathlib import Path
-from lv_py.api import migrate_directory, validate_configs, diff_configs
+from lv_py.api import diff_configs, migrate_directory, validate_configs
 from lv_py.models.migration_report import (
+    DiffResult,
     MigrationResult,
     ValidationResults,
-    DiffResult,
 )
 
 

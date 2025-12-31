@@ -49,12 +49,39 @@ lv-py migrate /path/to/logstash/configs
 # Dry-run to preview migration
 lv-py migrate --dry-run /path/to/logstash/configs
 
+# Migrate with custom output directory
+lv-py migrate --output-dir /path/to/output /path/to/logstash/configs
+
+# Overwrite existing files without confirmation
+lv-py migrate --overwrite /path/to/logstash/configs
+
+# Verbose output for debugging
+lv-py migrate --verbose /path/to/logstash/configs
+
+# Quiet mode (minimal output)
+lv-py migrate --quiet /path/to/logstash/configs
+
+# Skip Vector validation (faster)
+lv-py migrate --no-validate /path/to/logstash/configs
+
 # Validate generated Vector configs
 lv-py validate /path/to/vector/configs/*.toml
 
 # Compare Logstash and Vector configs
 lv-py diff pipeline.conf pipeline.toml
+
+# Get version
+lv-py --version
+
+# Get help
+lv-py --help
+lv-py migrate --help
 ```
+
+## Environment Variables
+
+- `LV_PY_LOG_LEVEL`: Set logging level (DEBUG, INFO, WARNING, ERROR)
+- `VECTOR_BIN`: Custom path to Vector binary for validation
 
 ## Development
 
