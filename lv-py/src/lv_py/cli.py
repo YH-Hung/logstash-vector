@@ -31,107 +31,88 @@ def migrate(
     verbose: bool,
 ) -> None:
     """Migrate Logstash configs to Vector format."""
-    from rich.progress import Progress, SpinnerColumn, TextColumn
     from rich.table import Table
 
-    from lv_py.migration import migrate_config
-    from lv_py.utils.file_utils import find_conf_files
+    from lv_py.api import migrate_directory
 
     console.print(f"[bold cyan]Logstash to Vector Migration Tool[/bold cyan]")
     console.print(f"Source directory: [yellow]{directory}[/yellow]")
     console.print(f"Mode: [yellow]{'DRY RUN' if dry_run else 'LIVE'}[/yellow]")
     console.print()
 
-    # Find all .conf files
+    # Perform migration
     try:
-        conf_files = find_conf_files(directory)
+        result = migrate_directory(directory=directory, output_dir=output_dir, dry_run=dry_run)
     except ValueError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise SystemExit(1)
 
-    if not conf_files:
+    if result.total_files == 0:
         console.print("[yellow]No .conf files found in directory[/yellow]")
         return
 
-    console.print(f"Found [green]{len(conf_files)}[/green] configuration file(s)")
+    console.print(f"Found [green]{result.total_files}[/green] configuration file(s)")
     console.print()
 
-    # Track overall results
-    total_files = len(conf_files)
-    successful_migrations = 0
-    failed_migrations = 0
-    all_reports = []
+    # Display results based on mode
+    if dry_run:
+        # Dry-run mode: show preview
+        console.print("[bold cyan]Migration Preview[/bold cyan]")
+        console.print()
 
-    # Process each file
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console,
-    ) as progress:
-        task = progress.add_task("Migrating...", total=total_files)
+        for preview in result.previews:
+            console.print(f"[bold]{preview.source_file.name}[/bold] → [bold]{preview.target_file.name}[/bold]")
+            console.print(f"  Estimated size: {preview.estimated_size} bytes")
 
-        for conf_file in conf_files:
-            progress.update(task, description=f"Processing {conf_file.name}...")
+            if preview.transformations:
+                console.print(f"  Transformations:")
+                for transform in preview.transformations:
+                    console.print(f"    • {transform.logstash_plugin} → {transform.vector_component}")
+                    if transform.notes:
+                        console.print(f"      {transform.notes}")
 
-            # Determine output path
-            if output_dir:
-                output_path = output_dir / conf_file.with_suffix(".toml").name
-            else:
-                output_path = conf_file.with_suffix(".toml")
+            if preview.unsupported_plugins:
+                console.print(f"  [yellow]⚠  {len(preview.unsupported_plugins)} unsupported plugin(s)[/yellow]")
 
-            # Migrate
-            vector_config, migration_report = migrate_config(conf_file, output_path)
-            all_reports.append(migration_report)
+            if preview.notes:
+                console.print(f"  [yellow]{preview.notes}[/yellow]")
 
-            if vector_config and not migration_report.errors:
-                # Success
-                if not dry_run:
-                    # Write TOML file
-                    toml_content = vector_config.to_toml()
-                    output_path.write_text(toml_content)
+            console.print()
 
-                    # Validate if requested
-                    if validate:
-                        is_valid, error_msg = vector_config.validate_syntax()
-                        if not is_valid and verbose:
-                            console.print(f"[yellow]Validation warning for {conf_file.name}:[/yellow] {error_msg}")
+        console.print("[bold]Summary[/bold]")
+        summary_table = Table(show_header=False)
+        summary_table.add_row("Total files", str(result.total_files))
+        summary_table.add_row("[green]Would succeed[/green]", str(result.successful))
+        summary_table.add_row("[red]Would fail[/red]", str(result.failed))
+        console.print(summary_table)
 
-                successful_migrations += 1
-                if verbose:
-                    console.print(f"[green]✓[/green] {conf_file.name} → {output_path.name}")
-            else:
-                # Failed
-                failed_migrations += 1
-                if verbose:
-                    console.print(f"[red]✗[/red] {conf_file.name} - {len(migration_report.errors)} error(s)")
+        console.print()
+        console.print("[cyan]Run without --dry-run to write files[/cyan]")
 
-            progress.advance(task)
+    else:
+        # Live mode: show summary
+        console.print("[bold]Migration Summary[/bold]")
 
-    # Display summary
-    console.print()
-    console.print("[bold]Migration Summary[/bold]")
+        summary_table = Table(show_header=False)
+        summary_table.add_row("Total files", str(result.total_files))
+        summary_table.add_row("[green]Successful[/green]", str(result.successful))
+        summary_table.add_row("[red]Failed[/red]", str(result.failed))
+        console.print(summary_table)
 
-    summary_table = Table(show_header=False)
-    summary_table.add_row("Total files", str(total_files))
-    summary_table.add_row("[green]Successful[/green]", str(successful_migrations))
-    summary_table.add_row("[red]Failed[/red]", str(failed_migrations))
-    console.print(summary_table)
+        # Write combined migration report
+        if report or result.reports:
+            report_path = report or directory / "migration-report.md"
 
-    # Write combined migration report
-    if report or not dry_run:
-        report_path = report or directory / "migration-report.md"
+            combined_report_lines = ["# Combined Migration Report\n"]
+            for migration_report in result.reports:
+                combined_report_lines.append(migration_report.to_markdown())
+                combined_report_lines.append("\n---\n")
 
-        combined_report_lines = ["# Combined Migration Report\n"]
-        for migration_report in all_reports:
-            combined_report_lines.append(migration_report.to_markdown())
-            combined_report_lines.append("\n---\n")
-
-        if not dry_run:
             report_path.write_text("\n".join(combined_report_lines))
             console.print(f"\n[cyan]Migration report:[/cyan] {report_path}")
 
     # Exit with appropriate code
-    if failed_migrations > 0:
+    if result.failed > 0:
         raise SystemExit(1)
 
 
@@ -139,22 +120,24 @@ def migrate(
 @click.argument("files", nargs=-1, type=click.Path(exists=True, path_type=Path))
 def validate(files: tuple[Path, ...]) -> None:
     """Validate Vector TOML files."""
-    from lv_py.utils.validation import validate_vector_config
+    from lv_py.api import validate_configs
+
+    if not files:
+        # Default to all .toml files in current directory
+        files = tuple(Path.cwd().glob("*.toml"))
 
     console.print(f"[bold]Validating {len(files)} file(s)[/bold]")
 
-    all_valid = True
-    for file_path in files:
-        is_valid, error_msg = validate_vector_config(file_path)
+    results = validate_configs(list(files))
 
-        if is_valid:
-            console.print(f"[green]✓[/green] {file_path}")
+    for validation_result in results.validation_results:
+        if validation_result.is_valid:
+            console.print(f"[green]✓[/green] {validation_result.file_path}")
         else:
-            console.print(f"[red]✗[/red] {file_path}")
-            console.print(f"  [red]{error_msg}[/red]")
-            all_valid = False
+            console.print(f"[red]✗[/red] {validation_result.file_path}")
+            console.print(f"  [red]{validation_result.error_message}[/red]")
 
-    if not all_valid:
+    if not results.all_valid:
         raise SystemExit(1)
 
 
@@ -163,10 +146,21 @@ def validate(files: tuple[Path, ...]) -> None:
 @click.argument("vector_toml", type=click.Path(exists=True, path_type=Path))
 def diff(logstash_conf: Path, vector_toml: Path) -> None:
     """Compare Logstash and Vector configurations."""
-    console.print(f"[bold]Comparing:[/bold] {logstash_conf} ↔ {vector_toml}")
+    from lv_py.api import diff_configs
 
-    # TODO: Implement diff logic (US3)
-    console.print("[yellow]Diff command coming in User Story 3[/yellow]")
+    console.print(f"[bold]Comparing:[/bold] {logstash_conf.name} ↔ {vector_toml.name}")
+    console.print()
+
+    try:
+        result = diff_configs(logstash_conf, vector_toml)
+
+        # Display formatted output
+        formatted_output = result.to_formatted_output()
+        console.print(formatted_output)
+
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

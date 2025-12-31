@@ -278,51 +278,51 @@ All paths are relative to `lv-py/` directory (Constitution Principle II: Multi-S
 
 ### Integration Test Samples
 
-- [ ] T135 [US3] Create test scenario for dry-run mode in lv-py/tests/integration/test_validation.py
-- [ ] T136 [P] [US3] Create test scenario for validation command in lv-py/tests/integration/test_validation.py
-- [ ] T137 [P] [US3] Create test scenario for diff command in lv-py/tests/integration/test_validation.py
+- [X] T135 [US3] Create test scenario for dry-run mode in lv-py/tests/integration/test_validation.py
+- [X] T136 [P] [US3] Create test scenario for validation command in lv-py/tests/integration/test_validation.py
+- [X] T137 [P] [US3] Create test scenario for diff command in lv-py/tests/integration/test_validation.py
 
 ### Integration Tests
 
-- [ ] T138 [US3] Write dry-run integration test (verify no files written) in lv-py/tests/integration/test_validation.py
-- [ ] T139 [P] [US3] Write validation command test in lv-py/tests/integration/test_validation.py
-- [ ] T140 [P] [US3] Write diff command test in lv-py/tests/integration/test_validation.py
-- [ ] T141 [US3] Run tests to verify they fail (RED phase)
+- [X] T138 [US3] Write dry-run integration test (verify no files written) in lv-py/tests/integration/test_validation.py
+- [X] T139 [P] [US3] Write validation command test in lv-py/tests/integration/test_validation.py
+- [X] T140 [P] [US3] Write diff command test in lv-py/tests/integration/test_validation.py
+- [X] T141 [US3] Run tests to verify they fail (RED phase)
 
 ### Dry-Run Implementation
 
-- [ ] T142 [US3] Add --dry-run flag to migrate command in lv-py/src/lv_py/cli.py
-- [ ] T143 [US3] Implement dry-run logic (skip file writes, generate preview)
-- [ ] T144 [US3] Add dry-run preview output with Rich formatting
-- [ ] T145 [US3] Display file sizes and summary in dry-run mode
+- [X] T142 [US3] Add --dry-run flag to migrate command in lv-py/src/lv_py/cli.py
+- [X] T143 [US3] Implement dry-run logic (skip file writes, generate preview)
+- [X] T144 [US3] Add dry-run preview output with Rich formatting
+- [X] T145 [US3] Display file sizes and summary in dry-run mode
 
 ### Validation Command Implementation
 
-- [ ] T146 [P] [US3] Implement validate command in lv-py/src/lv_py/cli.py
-- [ ] T147 [P] [US3] Add file glob support for validating multiple .toml files
-- [ ] T148 [P] [US3] Display validation results with Rich tables
-- [ ] T149 [P] [US3] Set appropriate exit codes (0 = valid, 1 = invalid)
+- [X] T146 [P] [US3] Implement validate command in lv-py/src/lv_py/cli.py
+- [X] T147 [P] [US3] Add file glob support for validating multiple .toml files
+- [X] T148 [P] [US3] Display validation results with Rich tables
+- [X] T149 [P] [US3] Set appropriate exit codes (0 = valid, 1 = invalid)
 
 ### Diff Command Implementation
 
-- [ ] T150 [P] [US3] Implement diff command in lv-py/src/lv_py/cli.py
-- [ ] T151 [P] [US3] Parse both Logstash and Vector configs
-- [ ] T152 [P] [US3] Generate component mapping comparison
-- [ ] T153 [P] [US3] Display side-by-side diff with Rich syntax highlighting
-- [ ] T154 [P] [US3] Highlight unsupported features in diff output
+- [X] T150 [P] [US3] Implement diff command in lv-py/src/lv_py/cli.py
+- [X] T151 [P] [US3] Parse both Logstash and Vector configs
+- [X] T152 [P] [US3] Generate component mapping comparison
+- [X] T153 [P] [US3] Display side-by-side diff with Rich syntax highlighting
+- [X] T154 [P] [US3] Highlight unsupported features in diff output
 
 ### Unit Tests
 
-- [ ] T155 [P] [US3] Write unit test for dry-run logic in lv-py/tests/unit/test_cli.py
-- [ ] T156 [P] [US3] Write unit test for validation command in lv-py/tests/unit/test_cli.py
-- [ ] T157 [P] [US3] Write unit test for diff command in lv-py/tests/unit/test_cli.py
+- [X] T155 [P] [US3] Write unit test for dry-run logic in lv-py/tests/unit/test_cli.py
+- [X] T156 [P] [US3] Write unit test for validation command in lv-py/tests/unit/test_cli.py
+- [X] T157 [P] [US3] Write unit test for diff command in lv-py/tests/unit/test_cli.py
 
 ### Validation
 
-- [ ] T158 [US3] Verify --dry-run never writes files
-- [ ] T159 [US3] Verify validate command correctly identifies invalid configs
-- [ ] T160 [US3] Verify diff output is readable and accurate
-- [ ] T161 [US3] Verify all US3 integration tests pass (GREEN phase)
+- [X] T158 [US3] Verify --dry-run never writes files
+- [X] T159 [US3] Verify validate command correctly identifies invalid configs
+- [X] T160 [US3] Verify diff output is readable and accurate
+- [X] T161 [US3] Verify all US3 integration tests pass (GREEN phase)
 
 **Checkpoint**: US3 complete - users can preview and validate migrations before committing
 
