@@ -203,7 +203,7 @@ All paths are relative to `lv-py/` directory (Constitution Principle II: Multi-S
 - [X] T106 [US1] Create complex pipeline test combining multiple plugins in lv-py/tests/integration/logstash/complex-pipeline.conf
 - [X] T107 [US1] Create expected Vector output for complex pipeline in lv-py/tests/integration/vector/complex-pipeline.toml
 - [X] T108 [US1] Write integration test for complex pipeline
-- [ ] T109 [US1] Verify all US1 integration tests pass (GREEN phase)
+- [X] T109 [US1] Verify all US1 integration tests pass (GREEN phase)
 
 **Checkpoint**: US1 complete and independently testable - users can now migrate basic Logstash configs
 
@@ -223,43 +223,43 @@ All paths are relative to `lv-py/` directory (Constitution Principle II: Multi-S
 
 ### Integration Test Samples
 
-- [ ] T110 [US2] Create unsupported-input.conf sample (e.g., kafka input) in lv-py/tests/integration/logstash/
-- [ ] T111 [US2] Create expected output with TODO markers in lv-py/tests/integration/vector/unsupported-input.toml
-- [ ] T112 [P] [US2] Create unsupported-filter.conf sample (e.g., ruby filter) in lv-py/tests/integration/logstash/
-- [ ] T113 [P] [US2] Create expected output with TODO markers in lv-py/tests/integration/vector/unsupported-filter.toml
-- [ ] T114 [P] [US2] Create mixed-support.conf sample (supported + unsupported) in lv-py/tests/integration/logstash/
-- [ ] T115 [P] [US2] Create expected output for mixed config in lv-py/tests/integration/vector/mixed-support.toml
+- [X] T110 [US2] Create unsupported-input.conf sample (e.g., kafka input) in lv-py/tests/integration/logstash/
+- [X] T111 [US2] Create expected output with TODO markers in lv-py/tests/integration/vector/unsupported-input.toml
+- [X] T112 [P] [US2] Create unsupported-filter.conf sample (e.g., ruby filter) in lv-py/tests/integration/logstash/
+- [X] T113 [P] [US2] Create expected output with TODO markers in lv-py/tests/integration/vector/unsupported-filter.toml
+- [X] T114 [P] [US2] Create mixed-support.conf sample (supported + unsupported) in lv-py/tests/integration/logstash/
+- [X] T115 [P] [US2] Create expected output for mixed config in lv-py/tests/integration/vector/mixed-support.toml
 
 ### Integration Tests
 
-- [ ] T116 [US2] Write test for unsupported input plugin handling in lv-py/tests/integration/test_unsupported_features.py
-- [ ] T117 [P] [US2] Write test for unsupported filter plugin handling in lv-py/tests/integration/test_unsupported_features.py
-- [ ] T118 [P] [US2] Write test for mixed supported/unsupported config in lv-py/tests/integration/test_unsupported_features.py
-- [ ] T119 [US2] Run tests to verify they fail (RED phase)
+- [X] T116 [US2] Write test for unsupported input plugin handling in lv-py/tests/integration/test_unsupported_features.py
+- [X] T117 [P] [US2] Write test for unsupported filter plugin handling in lv-py/tests/integration/test_unsupported_features.py
+- [X] T118 [P] [US2] Write test for mixed supported/unsupported config in lv-py/tests/integration/test_unsupported_features.py
+- [X] T119 [US2] Run tests to verify they fail (RED phase)
 
 ### Implementation
 
-- [ ] T120 [US2] Implement unsupported plugin detection in transformation orchestrator
-- [ ] T121 [US2] Implement TODO marker generation in toml_generator.py
-- [ ] T122 [US2] Create UnsupportedPlugin records in transformation orchestrator
-- [ ] T123 [US2] Implement migration report generation logic
-- [ ] T124 [US2] Add manual migration guidance templates for common unsupported plugins
-- [ ] T125 [US2] Implement MigrationReport.to_markdown() method with Rich formatting
-- [ ] T126 [US2] Add report file writing to CLI (default: <dir>/migration-report.md)
-- [ ] T127 [US2] Add --report flag to CLI for custom report path
+- [X] T120 [US2] Implement unsupported plugin detection in transformation orchestrator
+- [X] T121 [US2] Implement TODO marker generation in toml_generator.py
+- [X] T122 [US2] Create UnsupportedPlugin records in transformation orchestrator
+- [X] T123 [US2] Implement migration report generation logic
+- [X] T124 [US2] Add manual migration guidance templates for common unsupported plugins
+- [X] T125 [US2] Implement MigrationReport.to_markdown() method with Rich formatting
+- [X] T126 [US2] Add report file writing to CLI (default: <dir>/migration-report.md)
+- [X] T127 [US2] Add --report flag to CLI for custom report path
 
 ### Unit Tests
 
-- [ ] T128 [P] [US2] Write unit test for TODO marker generation in lv-py/tests/unit/test_generator.py
-- [ ] T129 [P] [US2] Write unit test for UnsupportedPlugin model validation in lv-py/tests/unit/test_models.py
-- [ ] T130 [P] [US2] Write unit test for migration report markdown generation in lv-py/tests/unit/test_models.py
+- [X] T128 [P] [US2] Write unit test for TODO marker generation in lv-py/tests/unit/test_generator.py
+- [X] T129 [P] [US2] Write unit test for UnsupportedPlugin model validation in lv-py/tests/unit/test_models.py
+- [X] T130 [P] [US2] Write unit test for migration report markdown generation in lv-py/tests/unit/test_models.py
 
 ### Validation
 
-- [ ] T131 [US2] Verify generated configs with TODO markers pass Vector validation
-- [ ] T132 [US2] Verify migration reports include line numbers (FR-013, SC-005)
-- [ ] T133 [US2] Verify manual migration guidance is clear (SC-004, SC-007)
-- [ ] T134 [US2] Verify all US2 integration tests pass (GREEN phase)
+- [X] T131 [US2] Verify generated configs with TODO markers pass Vector validation
+- [X] T132 [US2] Verify migration reports include line numbers (FR-013, SC-005)
+- [X] T133 [US2] Verify manual migration guidance is clear (SC-004, SC-007)
+- [X] T134 [US2] Verify all US2 integration tests pass (GREEN phase)
 
 **Checkpoint**: US2 complete - users receive clear guidance for unsupported features
 

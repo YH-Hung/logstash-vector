@@ -1,0 +1,28 @@
+# TODO: Manual migration required for unsupported plugin 'kafka' (input)
+# Original Logstash configuration:
+#   kafka {
+#     bootstrap_servers => "localhost:9092"
+#     topics => ["application-logs"]
+#     group_id => "logstash-consumer"
+#     codec => json
+#   }
+#
+# Vector alternatives to consider:
+#   - kafka source: https://vector.dev/docs/reference/configuration/sources/kafka/
+#
+# Manual migration guidance:
+#   The Logstash kafka input can be migrated to Vector's kafka source.
+#   Update the configuration below with the correct kafka settings.
+
+[sources.kafka_input_placeholder]
+type = "kafka"
+# FIXME: Configure kafka source settings
+# bootstrap_servers = "localhost:9092"
+# topics = ["application-logs"]
+# group_id = "logstash-consumer"
+
+[sinks.file_output]
+type = "file"
+inputs = ["kafka_input_placeholder"]
+path = "/var/log/output.log"
+encoding.codec = "text"

@@ -1,0 +1,36 @@
+[sources.file_input]
+type = "file"
+include = ["/var/log/app.log"]
+read_from = "beginning"
+
+# TODO: Manual migration required for unsupported plugin 'ruby' (filter)
+# Original Logstash configuration:
+#   ruby {
+#     code => "event.set('custom_field', event.get('message').upcase)"
+#   }
+#
+# Vector alternatives to consider:
+#   - remap transform with VRL: https://vector.dev/docs/reference/vrl/
+#
+# Manual migration guidance:
+#   The Logstash ruby filter executes custom Ruby code for event processing.
+#   In Vector, use the 'remap' transform with VRL (Vector Remap Language) to achieve similar functionality.
+#   VRL provides built-in functions for string manipulation and field transformation.
+#
+# Example VRL code for the above Ruby filter:
+#   .custom_field = upcase!(.message)
+
+[transforms.ruby_filter_placeholder]
+type = "remap"
+inputs = ["file_input"]
+source = '''
+# FIXME: Implement VRL transformation
+# .custom_field = upcase!(.message)
+'''
+
+[sinks.elasticsearch_output]
+type = "elasticsearch"
+inputs = ["ruby_filter_placeholder"]
+endpoints = ["http://localhost:9200"]
+mode = "bulk"
+bulk.index = "logstash-%Y.%m.%d"
