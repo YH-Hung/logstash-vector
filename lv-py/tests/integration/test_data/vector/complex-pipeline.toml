@@ -1,0 +1,41 @@
+[sources.file_input]
+type = "file"
+include = ["/data/apache-logs.txt"]
+read_from = "beginning"
+data_dir = "/tmp/vector"
+
+[transforms.grok_parse]
+type = "remap"
+inputs = ["file_input"]
+source = '''
+. = parse_groks!(.message, patterns: ["%{COMBINEDAPACHELOG}"])
+'''
+
+[transforms.mutate_fields]
+type = "remap"
+inputs = ["grok_parse"]
+source = '''
+.pipeline = "apache-processing"
+del(.host)
+del(.ecs)
+'''
+
+[transforms.parse_timestamp]
+type = "remap"
+inputs = ["mutate_fields"]
+source = '''
+.@timestamp = parse_timestamp!(.timestamp, format: "%d/%b/%Y:%H:%M:%S %z")
+'''
+
+[sinks.file_output]
+type = "file"
+inputs = ["parse_timestamp"]
+path = "/output/complex-pipeline-output.json"
+encoding.codec = "json"
+
+[sinks.elasticsearch_output]
+type = "elasticsearch"
+inputs = ["parse_timestamp"]
+endpoints = ["http://elasticsearch:9200"]
+mode = "bulk"
+bulk.index = "apache-logs-%Y.%m.%d"

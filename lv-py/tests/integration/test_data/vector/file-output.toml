@@ -1,0 +1,14 @@
+[sources.file_input]
+type = "file"
+include = ["/data/sample-logs.json"]
+read_from = "beginning"
+data_dir = "/tmp/vector"
+
+[sources.file_input.decoding]
+codec = "json"
+
+[sinks.file_output]
+type = "file"
+inputs = ["file_input"]
+path = "/output/file-output-result.json"
+encoding.codec = "json"

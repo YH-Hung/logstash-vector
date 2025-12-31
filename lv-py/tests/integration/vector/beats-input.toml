@@ -1,0 +1,13 @@
+[sources.beats_input]
+type = "socket"
+address = "0.0.0.0:5044"
+mode = "tcp"
+
+[sources.beats_input.decoding]
+codec = "bytes"
+
+[sinks.file_output]
+type = "file"
+inputs = ["beats_input"]
+path = "/output/beats-input-output.json"
+encoding.codec = "json"

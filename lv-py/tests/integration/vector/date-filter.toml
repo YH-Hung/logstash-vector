@@ -1,0 +1,21 @@
+[sources.file_input]
+type = "file"
+include = ["/data/sample-logs.json"]
+read_from = "beginning"
+data_dir = "/tmp/vector"
+
+[sources.file_input.decoding]
+codec = "json"
+
+[transforms.date_parse]
+type = "remap"
+inputs = ["file_input"]
+source = '''
+.@timestamp = parse_timestamp!(.timestamp, format: "%+")
+'''
+
+[sinks.file_output]
+type = "file"
+inputs = ["date_parse"]
+path = "/output/date-filter-output.json"
+encoding.codec = "json"

@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # Logstash service for functional equivalence testing
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: lv_py_logstash_test
+    volumes:
+      - ./logstash:/etc/logstash/conf.d:ro
+      - ./data:/data:ro
+      - ./output/logstash:/output
+    command: logstash -f /etc/logstash/conf.d/
+    ports:
+      - "9600:9600"  # Logstash API for health checks
+    environment:
+      - "LS_JAVA_OPTS=-Xmx512m -Xms512m"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9600"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lv_py_test_network
+
+  # Vector service for functional equivalence testing
+  vector:
+    image: timberio/vector:0.34.0-alpine
+    container_name: lv_py_vector_test
+    volumes:
+      - ./vector:/etc/vector:ro
+      - ./data:/data:ro
+      - ./output/vector:/output
+    command: --config /etc/vector/*.toml
+    ports:
+      - "8686:8686"  # Vector GraphQL API for health checks
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8686/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lv_py_test_network
+
+  # Log generator for producing test data
+  log-generator:
+    image: mingrammer/flog:0.4.3
+    container_name: lv_py_log_generator
+    command: -f json -d 1s -l -n 10
+    volumes:
+      - ./data:/data
+    depends_on:
+      logstash:
+        condition: service_healthy
+      vector:
+        condition: service_healthy
+    networks:
+      - lv_py_test_network
+
+networks:
+  lv_py_test_network:
+    driver: bridge

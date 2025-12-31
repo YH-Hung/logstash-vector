@@ -1,0 +1,24 @@
+[sources.file_input]
+type = "file"
+include = ["/data/sample-logs.json"]
+read_from = "beginning"
+data_dir = "/tmp/vector"
+
+[sources.file_input.decoding]
+codec = "json"
+
+[transforms.mutate]
+type = "remap"
+inputs = ["file_input"]
+source = '''
+.environment = "production"
+.new_field = del(.old_field)
+del(.unwanted_field)
+.message = upcase!(.message)
+'''
+
+[sinks.file_output]
+type = "file"
+inputs = ["mutate"]
+path = "/output/mutate-filter-output.json"
+encoding.codec = "json"

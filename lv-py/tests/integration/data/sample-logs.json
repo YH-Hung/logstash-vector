@@ -1,0 +1,5 @@
+{"timestamp": "2025-12-31T10:00:00Z", "level": "INFO", "message": "Application started", "service": "api", "old_field": "should_be_renamed", "unwanted_field": "should_be_removed"}
+{"timestamp": "2025-12-31T10:01:00Z", "level": "WARN", "message": "High memory usage detected", "service": "api"}
+{"timestamp": "2025-12-31T10:02:00Z", "level": "ERROR", "message": "Database connection failed", "service": "database"}
+{"timestamp": "2025-12-31T10:03:00Z", "level": "INFO", "message": "Request processed successfully", "service": "api", "old_field": "test", "unwanted_field": "remove_me"}
+{"timestamp": "2025-12-31T10:04:00Z", "level": "DEBUG", "message": "Cache hit", "service": "cache"}

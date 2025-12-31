@@ -107,40 +107,40 @@ All paths are relative to `lv-py/` directory (Constitution Principle II: Multi-S
 
 ### Integration Test Setup (Test-First per Constitution Principle V)
 
-- [ ] T040 [US1] Create Docker Compose file for integration tests in lv-py/tests/integration/docker-compose.yml
-- [ ] T041 [US1] Add Logstash container config to docker-compose.yml
-- [ ] T042 [US1] Add Vector container config to docker-compose.yml
-- [ ] T043 [US1] Add log generator container config to docker-compose.yml
-- [ ] T044 [US1] Create pytest fixtures for Docker services in lv-py/tests/integration/conftest.py
+- [X] T040 [US1] Create Docker Compose file for integration tests in lv-py/tests/integration/docker-compose.yml
+- [X] T041 [US1] Add Logstash container config to docker-compose.yml
+- [X] T042 [US1] Add Vector container config to docker-compose.yml
+- [X] T043 [US1] Add log generator container config to docker-compose.yml
+- [X] T044 [US1] Create pytest fixtures for Docker services in lv-py/tests/integration/conftest.py
 
 ### Integration Test Samples (create BEFORE implementation)
 
-- [ ] T045 [US1] Create file-input.conf sample in lv-py/tests/integration/logstash/
-- [ ] T046 [US1] Create file-input.toml expected output in lv-py/tests/integration/vector/
-- [ ] T047 [P] [US1] Create beats-input.conf sample in lv-py/tests/integration/logstash/
-- [ ] T048 [P] [US1] Create beats-input.toml expected output in lv-py/tests/integration/vector/
-- [ ] T049 [P] [US1] Create grok-filter.conf sample in lv-py/tests/integration/logstash/
-- [ ] T050 [P] [US1] Create grok-filter.toml expected output in lv-py/tests/integration/vector/
-- [ ] T051 [P] [US1] Create mutate-filter.conf sample in lv-py/tests/integration/logstash/
-- [ ] T052 [P] [US1] Create mutate-filter.toml expected output in lv-py/tests/integration/vector/
-- [ ] T053 [P] [US1] Create date-filter.conf sample in lv-py/tests/integration/logstash/
-- [ ] T054 [P] [US1] Create date-filter.toml expected output in lv-py/tests/integration/vector/
-- [ ] T055 [P] [US1] Create elasticsearch-output.conf sample in lv-py/tests/integration/logstash/
-- [ ] T056 [P] [US1] Create elasticsearch-output.toml expected output in lv-py/tests/integration/vector/
-- [ ] T057 [P] [US1] Create file-output.conf sample in lv-py/tests/integration/logstash/
-- [ ] T058 [P] [US1] Create file-output.toml expected output in lv-py/tests/integration/vector/
-- [ ] T059 [US1] Create sample log data in lv-py/tests/integration/data/sample-logs.json
+- [X] T045 [US1] Create file-input.conf sample in lv-py/tests/integration/logstash/
+- [X] T046 [US1] Create file-input.toml expected output in lv-py/tests/integration/vector/
+- [X] T047 [P] [US1] Create beats-input.conf sample in lv-py/tests/integration/logstash/
+- [X] T048 [P] [US1] Create beats-input.toml expected output in lv-py/tests/integration/vector/
+- [X] T049 [P] [US1] Create grok-filter.conf sample in lv-py/tests/integration/logstash/
+- [X] T050 [P] [US1] Create grok-filter.toml expected output in lv-py/tests/integration/vector/
+- [X] T051 [P] [US1] Create mutate-filter.conf sample in lv-py/tests/integration/logstash/
+- [X] T052 [P] [US1] Create mutate-filter.toml expected output in lv-py/tests/integration/vector/
+- [X] T053 [P] [US1] Create date-filter.conf sample in lv-py/tests/integration/logstash/
+- [X] T054 [P] [US1] Create date-filter.toml expected output in lv-py/tests/integration/vector/
+- [X] T055 [P] [US1] Create elasticsearch-output.conf sample in lv-py/tests/integration/logstash/
+- [X] T056 [P] [US1] Create elasticsearch-output.toml expected output in lv-py/tests/integration/vector/
+- [X] T057 [P] [US1] Create file-output.conf sample in lv-py/tests/integration/logstash/
+- [X] T058 [P] [US1] Create file-output.toml expected output in lv-py/tests/integration/vector/
+- [X] T059 [US1] Create sample log data in lv-py/tests/integration/data/sample-logs.json
 
 ### Integration Tests (fail initially - red phase)
 
-- [ ] T060 [US1] Write file input integration test in lv-py/tests/integration/test_functional_equivalence.py
-- [ ] T061 [P] [US1] Write beats input integration test in lv-py/tests/integration/test_functional_equivalence.py
-- [ ] T062 [P] [US1] Write grok filter integration test in lv-py/tests/integration/test_functional_equivalence.py
-- [ ] T063 [P] [US1] Write mutate filter integration test in lv-py/tests/integration/test_functional_equivalence.py
-- [ ] T064 [P] [US1] Write date filter integration test in lv-py/tests/integration/test_functional_equivalence.py
-- [ ] T065 [P] [US1] Write elasticsearch output integration test in lv-py/tests/integration/test_functional_equivalence.py
-- [ ] T066 [P] [US1] Write file output integration test in lv-py/tests/integration/test_functional_equivalence.py
-- [ ] T067 [US1] Run integration tests to verify they fail (RED phase) via `uv run pytest tests/integration/ -v`
+- [X] T060 [US1] Write file input integration test in lv-py/tests/integration/test_functional_equivalence.py
+- [X] T061 [P] [US1] Write beats input integration test in lv-py/tests/integration/test_functional_equivalence.py
+- [X] T062 [P] [US1] Write grok filter integration test in lv-py/tests/integration/test_functional_equivalence.py
+- [X] T063 [P] [US1] Write mutate filter integration test in lv-py/tests/integration/test_functional_equivalence.py
+- [X] T064 [P] [US1] Write date filter integration test in lv-py/tests/integration/test_functional_equivalence.py
+- [X] T065 [P] [US1] Write elasticsearch output integration test in lv-py/tests/integration/test_functional_equivalence.py
+- [X] T066 [P] [US1] Write file output integration test in lv-py/tests/integration/test_functional_equivalence.py
+- [X] T067 [US1] Run integration tests to verify they fail (RED phase) via `uv run pytest tests/integration/ -v`
 
 ### Input Transformers (implement to pass tests - green phase)
 
@@ -200,9 +200,9 @@ All paths are relative to `lv-py/` directory (Constitution Principle II: Multi-S
 
 ### End-to-End Test
 
-- [ ] T106 [US1] Create complex pipeline test combining multiple plugins in lv-py/tests/integration/logstash/complex-pipeline.conf
-- [ ] T107 [US1] Create expected Vector output for complex pipeline in lv-py/tests/integration/vector/complex-pipeline.toml
-- [ ] T108 [US1] Write integration test for complex pipeline
+- [X] T106 [US1] Create complex pipeline test combining multiple plugins in lv-py/tests/integration/logstash/complex-pipeline.conf
+- [X] T107 [US1] Create expected Vector output for complex pipeline in lv-py/tests/integration/vector/complex-pipeline.toml
+- [X] T108 [US1] Write integration test for complex pipeline
 - [ ] T109 [US1] Verify all US1 integration tests pass (GREEN phase)
 
 **Checkpoint**: US1 complete and independently testable - users can now migrate basic Logstash configs

@@ -1,0 +1,18 @@
+[sources.file_input]
+type = "file"
+include = ["/data/apache-logs.txt"]
+read_from = "beginning"
+data_dir = "/tmp/vector"
+
+[transforms.grok_parse]
+type = "remap"
+inputs = ["file_input"]
+source = '''
+. = parse_groks!(.message, patterns: ["%{COMBINEDAPACHELOG}"])
+'''
+
+[sinks.file_output]
+type = "file"
+inputs = ["grok_parse"]
+path = "/output/grok-filter-output.json"
+encoding.codec = "json"
