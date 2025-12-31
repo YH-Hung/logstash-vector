@@ -23,16 +23,16 @@ All paths are relative to `lv-py/` directory (Constitution Principle II: Multi-S
 
 **Purpose**: Project initialization and basic structure following research.md decisions
 
-- [ ] T001 Create lv-py project directory structure as defined in plan.md
-- [ ] T002 Initialize uv project with pyproject.toml in lv-py/
-- [ ] T003 [P] Install core dependencies (pyparsing, tomlkit, click, rich, pydantic) via uv in lv-py/
-- [ ] T004 [P] Install dev dependencies (ruff, mypy) via uv in lv-py/
-- [ ] T005 [P] Install test dependencies (pytest, pytest-docker-compose, testcontainers, pytest-cov) via uv in lv-py/
-- [ ] T006 [P] Configure ruff for Python 3.11+ in lv-py/pyproject.toml
-- [ ] T007 [P] Configure mypy with strict mode in lv-py/pyproject.toml
-- [ ] T008 Create __init__.py files for all packages in lv-py/src/lv_py/
-- [ ] T009 [P] Create README.md in lv-py/ with setup instructions from quickstart.md
-- [ ] T010 [P] Create .gitignore for Python project in lv-py/
+- [X] T001 Create lv-py project directory structure as defined in plan.md
+- [X] T002 Initialize uv project with pyproject.toml in lv-py/
+- [X] T003 [P] Install core dependencies (pyparsing, tomlkit, click, rich, pydantic) via uv in lv-py/
+- [X] T004 [P] Install dev dependencies (ruff, mypy) via uv in lv-py/
+- [X] T005 [P] Install test dependencies (pytest, pytest-docker-compose, testcontainers, pytest-cov) via uv in lv-py/
+- [X] T006 [P] Configure ruff for Python 3.11+ in lv-py/pyproject.toml
+- [X] T007 [P] Configure mypy with strict mode in lv-py/pyproject.toml
+- [X] T008 Create __init__.py files for all packages in lv-py/src/lv_py/
+- [X] T009 [P] Create README.md in lv-py/ with setup instructions from quickstart.md
+- [X] T010 [P] Create .gitignore for Python project in lv-py/
 
 ---
 
@@ -44,50 +44,50 @@ All paths are relative to `lv-py/` directory (Constitution Principle II: Multi-S
 
 ### Data Models (from data-model.md)
 
-- [ ] T011 Define PluginType enum in lv-py/src/lv_py/models/__init__.py
-- [ ] T012 [P] Define ComponentType enum in lv-py/src/lv_py/models/__init__.py
-- [ ] T013 [P] Define ErrorType enum in lv-py/src/lv_py/models/__init__.py
-- [ ] T014 Create LogstashPlugin model with Pydantic in lv-py/src/lv_py/models/logstash_config.py
-- [ ] T015 Create LogstashConfiguration model with Pydantic in lv-py/src/lv_py/models/logstash_config.py
-- [ ] T016 [P] Create VectorComponent model with Pydantic in lv-py/src/lv_py/models/vector_config.py
-- [ ] T017 [P] Create VectorConfiguration model with Pydantic in lv-py/src/lv_py/models/vector_config.py
-- [ ] T018 [P] Create MigrationError model with Pydantic in lv-py/src/lv_py/models/migration_report.py
-- [ ] T019 [P] Create UnsupportedPlugin model with Pydantic in lv-py/src/lv_py/models/migration_report.py
-- [ ] T020 [P] Create PluginMigration model with Pydantic in lv-py/src/lv_py/models/migration_report.py
-- [ ] T021 Create MigrationReport model with Pydantic in lv-py/src/lv_py/models/migration_report.py
+- [X] T011 Define PluginType enum in lv-py/src/lv_py/models/__init__.py
+- [X] T012 [P] Define ComponentType enum in lv-py/src/lv_py/models/__init__.py
+- [X] T013 [P] Define ErrorType enum in lv-py/src/lv_py/models/__init__.py
+- [X] T014 Create LogstashPlugin model with Pydantic in lv-py/src/lv_py/models/logstash_config.py
+- [X] T015 Create LogstashConfiguration model with Pydantic in lv-py/src/lv_py/models/logstash_config.py
+- [X] T016 [P] Create VectorComponent model with Pydantic in lv-py/src/lv_py/models/vector_config.py
+- [X] T017 [P] Create VectorConfiguration model with Pydantic in lv-py/src/lv_py/models/vector_config.py
+- [X] T018 [P] Create MigrationError model with Pydantic in lv-py/src/lv_py/models/migration_report.py
+- [X] T019 [P] Create UnsupportedPlugin model with Pydantic in lv-py/src/lv_py/models/migration_report.py
+- [X] T020 [P] Create PluginMigration model with Pydantic in lv-py/src/lv_py/models/migration_report.py
+- [X] T021 Create MigrationReport model with Pydantic in lv-py/src/lv_py/models/migration_report.py
 
 ### Parser Infrastructure
 
-- [ ] T022 Define Logstash DSL grammar with pyparsing in lv-py/src/lv_py/parser/logstash_parser.py
-- [ ] T023 Implement input block parser in lv-py/src/lv_py/parser/logstash_parser.py
-- [ ] T024 Implement filter block parser in lv-py/src/lv_py/parser/logstash_parser.py
-- [ ] T025 Implement output block parser in lv-py/src/lv_py/parser/logstash_parser.py
-- [ ] T026 Implement plugin configuration parser in lv-py/src/lv_py/parser/logstash_parser.py
-- [ ] T027 Add error recovery and reporting to parser in lv-py/src/lv_py/parser/logstash_parser.py
-- [ ] T028 Create parse_file() function that returns LogstashConfiguration in lv-py/src/lv_py/parser/logstash_parser.py
+- [X] T022 Define Logstash DSL grammar with pyparsing in lv-py/src/lv_py/parser/logstash_parser.py
+- [X] T023 Implement input block parser in lv-py/src/lv_py/parser/logstash_parser.py
+- [X] T024 Implement filter block parser in lv-py/src/lv_py/parser/logstash_parser.py
+- [X] T025 Implement output block parser in lv-py/src/lv_py/parser/logstash_parser.py
+- [X] T026 Implement plugin configuration parser in lv-py/src/lv_py/parser/logstash_parser.py
+- [X] T027 Add error recovery and reporting to parser in lv-py/src/lv_py/parser/logstash_parser.py
+- [X] T028 Create parse_file() function that returns LogstashConfiguration in lv-py/src/lv_py/parser/logstash_parser.py
 
 ### Transformer Base
 
-- [ ] T029 Define base transformer interface in lv-py/src/lv_py/transformers/base.py
-- [ ] T030 Create plugin registry system in lv-py/src/lv_py/transformers/__init__.py
+- [X] T029 Define base transformer interface in lv-py/src/lv_py/transformers/base.py
+- [X] T030 Create plugin registry system in lv-py/src/lv_py/transformers/__init__.py
 
 ### TOML Generator
 
-- [ ] T031 Implement TOML generation with tomlkit in lv-py/src/lv_py/generator/toml_generator.py
-- [ ] T032 Add comment preservation for TODO markers in lv-py/src/lv_py/generator/toml_generator.py
-- [ ] T033 Implement VectorConfiguration.to_toml() method in lv-py/src/lv_py/models/vector_config.py
+- [X] T031 Implement TOML generation with tomlkit in lv-py/src/lv_py/generator/toml_generator.py
+- [X] T032 Add comment preservation for TODO markers in lv-py/src/lv_py/generator/toml_generator.py
+- [X] T033 Implement VectorConfiguration.to_toml() method in lv-py/src/lv_py/models/vector_config.py
 
 ### Utilities
 
-- [ ] T034 [P] Create file discovery utility (find .conf files) in lv-py/src/lv_py/utils/file_utils.py
-- [ ] T035 [P] Create Vector validation wrapper (subprocess `vector validate`) in lv-py/src/lv_py/utils/validation.py
-- [ ] T036 [P] Create migration report markdown generator in lv-py/src/lv_py/models/migration_report.py
+- [X] T034 [P] Create file discovery utility (find .conf files) in lv-py/src/lv_py/utils/file_utils.py
+- [X] T035 [P] Create Vector validation wrapper (subprocess `vector validate`) in lv-py/src/lv_py/utils/validation.py
+- [X] T036 [P] Create migration report markdown generator in lv-py/src/lv_py/models/migration_report.py
 
 ### CLI Foundation
 
-- [ ] T037 Create Click CLI entry point with basic structure in lv-py/src/lv_py/cli.py
-- [ ] T038 Add Rich console initialization in lv-py/src/lv_py/cli.py
-- [ ] T039 Configure CLI entry point in lv-py/pyproject.toml [project.scripts]
+- [X] T037 Create Click CLI entry point with basic structure in lv-py/src/lv_py/cli.py
+- [X] T038 Add Rich console initialization in lv-py/src/lv_py/cli.py
+- [X] T039 Configure CLI entry point in lv-py/pyproject.toml [project.scripts]
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -144,59 +144,59 @@ All paths are relative to `lv-py/` directory (Constitution Principle II: Multi-S
 
 ### Input Transformers (implement to pass tests - green phase)
 
-- [ ] T068 [US1] Implement file input transformer in lv-py/src/lv_py/transformers/inputs.py
-- [ ] T069 [US1] Register file input transformer in plugin registry
-- [ ] T070 [US1] Verify file input test passes
-- [ ] T071 [P] [US1] Implement beats input transformer in lv-py/src/lv_py/transformers/inputs.py
-- [ ] T072 [P] [US1] Register beats input transformer in plugin registry
-- [ ] T073 [P] [US1] Verify beats input test passes
+- [X] T068 [US1] Implement file input transformer in lv-py/src/lv_py/transformers/inputs.py
+- [X] T069 [US1] Register file input transformer in plugin registry
+- [X] T070 [US1] Verify file input test passes
+- [X] T071 [P] [US1] Implement beats input transformer in lv-py/src/lv_py/transformers/inputs.py
+- [X] T072 [P] [US1] Register beats input transformer in plugin registry
+- [X] T073 [P] [US1] Verify beats input test passes
 
 ### Filter Transformers
 
-- [ ] T074 [P] [US1] Implement grok filter transformer in lv-py/src/lv_py/transformers/filters.py
-- [ ] T075 [P] [US1] Register grok filter transformer in plugin registry
-- [ ] T076 [P] [US1] Verify grok filter test passes
-- [ ] T077 [P] [US1] Implement mutate filter transformer in lv-py/src/lv_py/transformers/filters.py
-- [ ] T078 [P] [US1] Register mutate filter transformer in plugin registry
-- [ ] T079 [P] [US1] Verify mutate filter test passes
-- [ ] T080 [P] [US1] Implement date filter transformer in lv-py/src/lv_py/transformers/filters.py
-- [ ] T081 [P] [US1] Register date filter transformer in plugin registry
-- [ ] T082 [P] [US1] Verify date filter test passes
+- [X] T074 [P] [US1] Implement grok filter transformer in lv-py/src/lv_py/transformers/filters.py
+- [X] T075 [P] [US1] Register grok filter transformer in plugin registry
+- [X] T076 [P] [US1] Verify grok filter test passes
+- [X] T077 [P] [US1] Implement mutate filter transformer in lv-py/src/lv_py/transformers/filters.py
+- [X] T078 [P] [US1] Register mutate filter transformer in plugin registry
+- [X] T079 [P] [US1] Verify mutate filter test passes
+- [X] T080 [P] [US1] Implement date filter transformer in lv-py/src/lv_py/transformers/filters.py
+- [X] T081 [P] [US1] Register date filter transformer in plugin registry
+- [X] T082 [P] [US1] Verify date filter test passes
 
 ### Output Transformers
 
-- [ ] T083 [P] [US1] Implement elasticsearch output transformer in lv-py/src/lv_py/transformers/outputs.py
-- [ ] T084 [P] [US1] Register elasticsearch output transformer in plugin registry
-- [ ] T085 [P] [US1] Verify elasticsearch output test passes
-- [ ] T086 [P] [US1] Implement file output transformer in lv-py/src/lv_py/transformers/outputs.py
-- [ ] T087 [P] [US1] Register file output transformer in plugin registry
-- [ ] T088 [P] [US1] Verify file output test passes
+- [X] T083 [P] [US1] Implement elasticsearch output transformer in lv-py/src/lv_py/transformers/outputs.py
+- [X] T084 [P] [US1] Register elasticsearch output transformer in plugin registry
+- [X] T085 [P] [US1] Verify elasticsearch output test passes
+- [X] T086 [P] [US1] Implement file output transformer in lv-py/src/lv_py/transformers/outputs.py
+- [X] T087 [P] [US1] Register file output transformer in plugin registry
+- [X] T088 [P] [US1] Verify file output test passes
 
 ### CLI Implementation
 
-- [ ] T089 [US1] Implement migrate command with directory argument in lv-py/src/lv_py/cli.py
-- [ ] T090 [US1] Add file discovery logic (find all .conf files in directory)
-- [ ] T091 [US1] Add parsing loop (parse each .conf file)
-- [ ] T092 [US1] Add transformation orchestration (apply all transformers)
-- [ ] T093 [US1] Add TOML generation and file writing
-- [ ] T094 [US1] Add progress display with Rich
-- [ ] T095 [US1] Add empty directory handling (FR-001 edge case)
+- [X] T089 [US1] Implement migrate command with directory argument in lv-py/src/lv_py/cli.py
+- [X] T090 [US1] Add file discovery logic (find all .conf files in directory)
+- [X] T091 [US1] Add parsing loop (parse each .conf file)
+- [X] T092 [US1] Add transformation orchestration (apply all transformers)
+- [X] T093 [US1] Add TOML generation and file writing
+- [X] T094 [US1] Add progress display with Rich
+- [X] T095 [US1] Add empty directory handling (FR-001 edge case)
 
 ### Unit Tests for Transformers
 
-- [ ] T096 [P] [US1] Write unit tests for file input transformer in lv-py/tests/unit/test_transformers.py
-- [ ] T097 [P] [US1] Write unit tests for beats input transformer in lv-py/tests/unit/test_transformers.py
-- [ ] T098 [P] [US1] Write unit tests for grok filter transformer in lv-py/tests/unit/test_transformers.py
-- [ ] T099 [P] [US1] Write unit tests for mutate filter transformer in lv-py/tests/unit/test_transformers.py
-- [ ] T100 [P] [US1] Write unit tests for date filter transformer in lv-py/tests/unit/test_transformers.py
-- [ ] T101 [P] [US1] Write unit tests for elasticsearch output transformer in lv-py/tests/unit/test_transformers.py
-- [ ] T102 [P] [US1] Write unit tests for file output transformer in lv-py/tests/unit/test_transformers.py
+- [X] T096 [P] [US1] Write unit tests for file input transformer in lv-py/tests/unit/test_transformers.py
+- [X] T097 [P] [US1] Write unit tests for beats input transformer in lv-py/tests/unit/test_transformers.py
+- [X] T098 [P] [US1] Write unit tests for grok filter transformer in lv-py/tests/unit/test_transformers.py
+- [X] T099 [P] [US1] Write unit tests for mutate filter transformer in lv-py/tests/unit/test_transformers.py
+- [X] T100 [P] [US1] Write unit tests for date filter transformer in lv-py/tests/unit/test_transformers.py
+- [X] T101 [P] [US1] Write unit tests for elasticsearch output transformer in lv-py/tests/unit/test_transformers.py
+- [X] T102 [P] [US1] Write unit tests for file output transformer in lv-py/tests/unit/test_transformers.py
 
 ### Validation
 
-- [ ] T103 [US1] Add Vector validation check after generation in CLI
-- [ ] T104 [US1] Implement VectorConfiguration.validate_syntax() method
-- [ ] T105 [US1] Add validation failure handling (exit code 2 per contracts)
+- [X] T103 [US1] Add Vector validation check after generation in CLI
+- [X] T104 [US1] Implement VectorConfiguration.validate_syntax() method
+- [X] T105 [US1] Add validation failure handling (exit code 2 per contracts)
 
 ### End-to-End Test
 

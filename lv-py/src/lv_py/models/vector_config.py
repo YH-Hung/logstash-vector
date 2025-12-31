@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from lv_py.models import ComponentType
 
@@ -17,16 +17,16 @@ class VectorComponent(BaseModel):
     inputs: list[str] = Field(default_factory=list)
     comments: list[str] = Field(default_factory=list)
 
-    @field_validator("inputs")
-    @classmethod
-    def validate_inputs_for_type(cls, v: list[str], info: Any) -> list[str]:
-        """Validate inputs based on component type."""
-        comp_type = info.data.get("component_type")
-        if comp_type == ComponentType.SOURCE and len(v) > 0:
+    def validate_final(self) -> None:
+        """
+        Validate the component after all fields are set.
+
+        Call this method after setting inputs in the migration orchestrator.
+        """
+        if self.component_type == ComponentType.SOURCE and len(self.inputs) > 0:
             raise ValueError("SOURCE components cannot have inputs")
-        if comp_type in (ComponentType.TRANSFORM, ComponentType.SINK) and len(v) == 0:
-            raise ValueError(f"{comp_type} components must have at least one input")
-        return v
+        if self.component_type in (ComponentType.TRANSFORM, ComponentType.SINK) and len(self.inputs) == 0:
+            raise ValueError(f"{self.component_type} components must have at least one input")
 
 
 class VectorConfiguration(BaseModel):
@@ -38,12 +38,25 @@ class VectorConfiguration(BaseModel):
     sinks: dict[str, VectorComponent] = Field(default_factory=dict, min_length=1)
     global_options: dict[str, Any] = Field(default_factory=dict)
 
+    @model_validator(mode='after')
+    def validate_all_components(self) -> 'VectorConfiguration':
+        """Validate all components have proper inputs set."""
+        for component in self.sources.values():
+            component.validate_final()
+        for component in self.transforms.values():
+            component.validate_final()
+        for component in self.sinks.values():
+            component.validate_final()
+        return self
+
     def to_toml(self) -> str:
         """Generate TOML string using tomlkit."""
-        # Will be implemented in generator/toml_generator.py
-        raise NotImplementedError("to_toml() will be implemented in toml_generator.py")
+        from lv_py.generator.toml_generator import generate_toml
+
+        return generate_toml(self)
 
     def validate_syntax(self) -> tuple[bool, str]:
         """Validate using `vector validate` command."""
-        # Will be implemented in utils/validation.py
-        raise NotImplementedError("validate_syntax() will be implemented in validation.py")
+        from lv_py.utils.validation import validate_vector_config
+
+        return validate_vector_config(self.file_path)

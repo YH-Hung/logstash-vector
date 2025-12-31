@@ -11,13 +11,10 @@ def find_conf_files(directory: Path) -> list[Path]:
         directory: Directory to search
 
     Returns:
-        List of .conf file paths
+        List of .conf file paths sorted by name
 
-    TODO: Implement proper file discovery
-    - Recursively search directory
-    - Filter for .conf extension
-    - Handle permissions errors gracefully
-    - Sort by filename
+    Raises:
+        ValueError: If directory doesn't exist or is not a directory
     """
     if not directory.exists():
         raise ValueError(f"Directory not found: {directory}")
@@ -25,5 +22,8 @@ def find_conf_files(directory: Path) -> list[Path]:
     if not directory.is_dir():
         raise ValueError(f"Not a directory: {directory}")
 
-    # Placeholder
-    return list(directory.glob("*.conf"))
+    # Find all .conf files recursively
+    conf_files = list(directory.rglob("*.conf"))
+
+    # Sort by filename for consistent ordering
+    return sorted(conf_files, key=lambda p: p.name)
