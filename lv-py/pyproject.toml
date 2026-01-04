@@ -23,10 +23,6 @@ test = [
     "testcontainers>=3.7.0",
     "pytest-cov>=4.1.0",
 ]
-dev = [
-    "ruff>=0.1.0",
-    "mypy>=1.7.0",
-]
 
 [project.scripts]
 lv-py = "lv_py.cli:main"
@@ -38,10 +34,13 @@ build-backend = "hatchling.build"
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-select = ["E", "F", "I", "N", "W", "UP"]
 
 [tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
 ignore = ["E501"]  # Line too long (handled by formatter)
+
+[tool.ruff.lint.per-file-ignores]
+"src/lv_py/parser/logstash_parser.py" = ["N806"]  # Allow UPPERCASE constants for pyparsing grammar
 
 [tool.mypy]
 python_version = "3.11"

@@ -31,12 +31,12 @@ type PluginMigration struct {
 
 // UnsupportedPlugin represents a plugin that couldn't be automatically migrated
 type UnsupportedPlugin struct {
-	PluginName                string
-	PluginType                PluginType
-	LineNumber                int
-	OriginalConfig            string
-	ManualMigrationGuidance   string
-	VectorAlternatives        []string
+	PluginName              string
+	PluginType              PluginType
+	LineNumber              int
+	OriginalConfig          string
+	ManualMigrationGuidance string
+	VectorAlternatives      []string
 }
 
 // MigrationReport represents the results of migrating a single configuration file

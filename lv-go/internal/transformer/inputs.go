@@ -3,7 +3,7 @@ package transformer
 import (
 	"fmt"
 
-	"github.com/yourusername/lv-go/internal/models"
+	"lv-go/internal/models"
 )
 
 // FileInputTransformer transforms Logstash file input to Vector file source

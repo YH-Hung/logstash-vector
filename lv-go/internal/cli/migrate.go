@@ -6,8 +6,8 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/yourusername/lv-go/internal/models"
-	"github.com/yourusername/lv-go/pkg/api"
+	"lv-go/internal/models"
+	"lv-go/pkg/api"
 )
 
 var (

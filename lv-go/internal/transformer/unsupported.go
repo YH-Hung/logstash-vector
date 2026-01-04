@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/yourusername/lv-go/internal/models"
+	"lv-go/internal/models"
 )
 
 // CreateUnsupportedPlaceholder creates a placeholder component for unsupported plugins

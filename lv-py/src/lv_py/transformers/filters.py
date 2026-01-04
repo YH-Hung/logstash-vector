@@ -176,11 +176,27 @@ class DateFilterTransformer(BaseTransformer):
             source_field = match_config[0]
             date_format = match_config[1]
 
-            # Convert Logstash date format to strptime format
+            # Convert Logstash/Joda-Time date format to strptime format
+            # These mappings ensure compatibility with common Logstash date patterns
             format_map = {
+                # Special formats
                 "ISO8601": "%+",  # ISO 8601 format
                 "UNIX": "%s",  # Unix timestamp
                 "UNIX_MS": "%s",  # Unix timestamp in milliseconds
+                # Common Joda-Time patterns (for Logstash compatibility)
+                "yyyy-MM-dd HH:mm:ss": "%Y-%m-%d %H:%M:%S",
+                "yyyy-MM-dd'T'HH:mm:ss": "%Y-%m-%dT%H:%M:%S",
+                "yyyy-MM-dd'T'HH:mm:ssZ": "%Y-%m-%dT%H:%M:%S%z",
+                "yyyy-MM-dd'T'HH:mm:ss.SSSZ": "%Y-%m-%dT%H:%M:%S%.3f%z",
+                "dd/MMM/yyyy:HH:mm:ss Z": "%d/%b/%Y:%H:%M:%S %z",
+                "MMM dd HH:mm:ss": "%b %d %H:%M:%S",
+                "MMM dd yyyy HH:mm:ss": "%b %d %Y %H:%M:%S",
+                "yyyy/MM/dd HH:mm:ss": "%Y/%m/%d %H:%M:%S",
+                "dd-MM-yyyy HH:mm:ss": "%d-%m-%Y %H:%M:%S",
+                "yyyy-MM-dd": "%Y-%m-%d",
+                "dd/MM/yyyy": "%d/%m/%Y",
+                "MM/dd/yyyy": "%m/%d/%Y",
+                "EEE MMM dd HH:mm:ss yyyy": "%a %b %d %H:%M:%S %Y",
             }
 
             vrl_format = format_map.get(date_format, date_format)

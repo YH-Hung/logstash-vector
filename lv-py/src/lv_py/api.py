@@ -3,9 +3,11 @@
 from pathlib import Path
 
 from lv_py.migration import migrate_config
+from lv_py.models import ErrorType
 from lv_py.models.migration_report import (
     ComponentMapping,
     DiffResult,
+    MigrationError,
     MigrationPreview,
     MigrationResult,
     TransformationPreview,
@@ -118,7 +120,6 @@ def migrate_directory(
                         is_valid, error_msg = validate_vector_config(output_path)
                         if not is_valid:
                             # Add validation error to report
-                            from lv_py.models.migration_report import ErrorType, MigrationError
                             validation_error = MigrationError(
                                 error_type=ErrorType.VALIDATION_ERROR,
                                 message=f"Vector validation failed: {error_msg}",
@@ -236,14 +237,8 @@ def diff_configs(logstash_config: Path, vector_config: Path) -> DiffResult:
             )
             result.input_mappings.append(mapping)
         elif not input_plugin.supported:
-            # Add to unsupported features
-            result.unsupported_features.extend(
-                [
-                    up
-                    for up in []
-                    if up.plugin_name == input_plugin.plugin_name
-                ]
-            )
+            # Add to unsupported features (currently empty list - placeholder for future logic)
+            pass
 
     # Map filters to transforms
     for filter_plugin in logstash_cfg.filters:

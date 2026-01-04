@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/yourusername/lv-go/internal/models"
+	"lv-go/internal/models"
 )
 
 // ElasticsearchOutputTransformer transforms Logstash elasticsearch output to Vector elasticsearch sink

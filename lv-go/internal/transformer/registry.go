@@ -3,7 +3,7 @@ package transformer
 import (
 	"fmt"
 
-	"github.com/yourusername/lv-go/internal/models"
+	"lv-go/internal/models"
 )
 
 // Registry holds all available transformers organized by plugin type

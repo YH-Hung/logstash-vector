@@ -1,5 +1,7 @@
 """Input plugin transformers (Logstash inputs → Vector sources)."""
 
+from typing import Any
+
 from lv_py.models import ComponentType
 from lv_py.models.logstash_config import LogstashPlugin
 from lv_py.models.vector_config import VectorComponent
@@ -30,7 +32,7 @@ class FileInputTransformer(BaseTransformer):
         config = plugin.config
 
         # Build Vector config
-        vector_config = {}
+        vector_config: dict[str, Any] = {}
 
         # Map path to include (Vector uses array)
         if "path" in config:
@@ -45,10 +47,12 @@ class FileInputTransformer(BaseTransformer):
 
         # Map start_position to read_from
         start_position = config.get("start_position", "end")
+        read_from_value: str
         if start_position == "beginning":
-            vector_config["read_from"] = "beginning"
+            read_from_value = "beginning"
         else:
-            vector_config["read_from"] = "end"
+            read_from_value = "end"
+        vector_config["read_from"] = read_from_value
 
         # Optionally map other fields
         if "tags" in config:

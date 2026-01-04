@@ -1,6 +1,6 @@
 """Migration orchestration - coordinates parsing, transformation, and generation."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from lv_py.models import ErrorType
@@ -54,7 +54,7 @@ def migrate_config(
         report = MigrationReport(
             source_file=logstash_conf_path,
             target_file=output_path,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
             supported_plugins=supported_plugins,
             unsupported_plugins=unsupported_plugins,
             errors=errors,
@@ -249,7 +249,7 @@ def migrate_config(
     report = MigrationReport(
         source_file=logstash_conf_path,
         target_file=output_path,
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(UTC),
         supported_plugins=supported_plugins,
         unsupported_plugins=unsupported_plugins,
         errors=errors,

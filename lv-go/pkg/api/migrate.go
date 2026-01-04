@@ -7,13 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yourusername/lv-go/internal/generator"
-	"github.com/yourusername/lv-go/internal/models"
-	"github.com/yourusername/lv-go/internal/parser"
-	"github.com/yourusername/lv-go/internal/report"
-	"github.com/yourusername/lv-go/internal/transformer"
-	"github.com/yourusername/lv-go/internal/utils"
-	"github.com/yourusername/lv-go/internal/validator"
+	"lv-go/internal/generator"
+	"lv-go/internal/models"
+	"lv-go/internal/parser"
+	"lv-go/internal/report"
+	"lv-go/internal/transformer"
+	"lv-go/internal/utils"
+	"lv-go/internal/validator"
 )
 
 // MigrateConfig migrates a single Logstash configuration to Vector format
@@ -262,10 +262,30 @@ func MigrateDirectory(directory, outputDir string, dryRun, validate bool) (*mode
 		}
 
 		// Migrate the file
-		vectorConfig, migrationReport, _ := MigrateConfig(confFile, outputPath)
+		vectorConfig, migrationReport, err := MigrateConfig(confFile, outputPath)
+		if err != nil {
+			// Log error but continue processing other files
+			if migrationReport != nil {
+				migrationReport.Errors = append(migrationReport.Errors, models.MigrationError{
+					ErrorType:  models.ErrorTypeTransformationError,
+					Message:    fmt.Sprintf("Migration failed: %v", err),
+					LineNumber: 0,
+					FilePath:   confFile,
+				})
+				result.Reports = append(result.Reports, *migrationReport)
+			}
+			result.FailureCount++
+			continue
+		}
+
+		// Ensure we have valid config and report
+		if vectorConfig == nil || migrationReport == nil {
+			result.FailureCount++
+			continue
+		}
 
 		// Write the TOML file (unless dry-run)
-		if !dryRun && vectorConfig != nil {
+		if !dryRun {
 			tomlContent, err := generator.GenerateTOML(vectorConfig, confFile)
 			if err != nil {
 				migrationReport.Errors = append(migrationReport.Errors, models.MigrationError{

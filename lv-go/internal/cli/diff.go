@@ -6,8 +6,8 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/yourusername/lv-go/internal/models"
-	"github.com/yourusername/lv-go/internal/parser"
+	"lv-go/internal/models"
+	"lv-go/internal/parser"
 )
 
 var diffCmd = &cobra.Command{

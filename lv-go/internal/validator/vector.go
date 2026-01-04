@@ -8,11 +8,13 @@ import (
 	"time"
 )
 
-// ValidateVectorConfig runs 'vector validate' on a config file
+// ValidateVectorConfig runs 'vector validate' on a config file.
+// If Vector CLI is not found, returns (true, warning message, nil) to allow
+// migrations without Vector installed (useful for development and CI/CD).
 func ValidateVectorConfig(configPath string) (bool, string, error) {
 	// Check if vector is installed
 	if !isVectorInstalled() {
-		return false, "Vector CLI not found in PATH", nil
+		return true, "Vector CLI not found - skipping validation", nil
 	}
 
 	// Create context with timeout
@@ -39,8 +41,8 @@ func ValidateVectorConfig(configPath string) (bool, string, error) {
 
 // isVectorInstalled checks if the vector binary is available
 func isVectorInstalled() bool {
-	cmd := exec.Command("which", "vector")
-	err := cmd.Run()
+	// Use exec.LookPath for cross-platform binary detection
+	_, err := exec.LookPath("vector")
 	return err == nil
 }
 

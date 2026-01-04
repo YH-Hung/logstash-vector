@@ -1,10 +1,9 @@
-module github.com/yourusername/lv-go
+module lv-go
 
 go 1.21
 
 require (
 	github.com/fatih/color v1.16.0
-	github.com/pelletier/go-toml/v2 v2.1.1
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 )

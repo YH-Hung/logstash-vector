@@ -1,4 +1,21 @@
-"""Logstash DSL parser using pyparsing."""
+"""Logstash DSL parser using pyparsing.
+
+NOTE: This module contains a complete pyparsing-based parser implementation that is
+currently NOT in use. The actual parser delegates to the regex-based implementation
+in logstash_parser_regex.py (see parse_file() function).
+
+Why pyparsing is not used:
+    - The regex-based parser proved more reliable for multi-block configurations
+    - Pyparsing has challenges with nested structures and complex Logstash DSL syntax
+    - The regex parser better handles edge cases and malformed configs
+
+This pyparsing implementation is kept as a reference implementation and may be useful for:
+    - Future enhancements requiring AST-level parsing
+    - Extracting structural information beyond simple key-value pairs
+    - Experimental features requiring deeper syntax analysis
+
+For production use, see: lv_py.parser.logstash_parser_regex
+"""
 
 from pathlib import Path
 from typing import Any
@@ -24,7 +41,7 @@ from lv_py.models import PluginType
 from lv_py.models.logstash_config import LogstashConfiguration, LogstashPlugin
 
 # Enable packrat parsing for better performance
-pp.ParserElement.enablePackrat()
+pp.ParserElement.enable_packrat()
 
 
 def _create_logstash_grammar() -> pp.ParserElement:
@@ -100,6 +117,8 @@ def _attach_line_number(s: str, loc: int, toks: pp.ParseResults) -> pp.ParseResu
 def _parse_plugin(plugin_data: pp.ParseResults, plugin_type: PluginType) -> LogstashPlugin:
     """Convert parsed plugin data to LogstashPlugin model."""
     config_dict: dict[str, Any] = {}
+    # Type ignore for pyparsing ParseResults.get() which doesn't have type hints
+    line_num: int = int(plugin_data.get("line_number", 1))  # type: ignore[no-untyped-call]
 
     if "config" in plugin_data and plugin_data["config"]:
         for key_value in plugin_data["config"]:
@@ -115,7 +134,7 @@ def _parse_plugin(plugin_data: pp.ParseResults, plugin_type: PluginType) -> Logs
         plugin_type=plugin_type,
         plugin_name=str(plugin_data["plugin_name"]),
         config=config_dict,
-        line_number=plugin_data.get("line_number", 1),
+        line_number=line_num,
         conditionals=None,  # TODO: Add support for if/else conditionals
     )
 
@@ -123,6 +142,10 @@ def _parse_plugin(plugin_data: pp.ParseResults, plugin_type: PluginType) -> Logs
 def parse_file(file_path: Path) -> LogstashConfiguration:
     """
     Parse a Logstash configuration file and return LogstashConfiguration.
+
+    NOTE: This function delegates to the regex-based parser instead of using the
+    pyparsing implementation defined above in this file. The regex parser has proven
+    more reliable for production use with complex, multi-block Logstash configurations.
 
     Args:
         file_path: Path to the .conf file
@@ -133,8 +156,8 @@ def parse_file(file_path: Path) -> LogstashConfiguration:
     Raises:
         ValueError: If parsing fails or file is invalid
     """
-    # Use regex-based parser for reliability
-    # pyparsing has issues with multi-block parsing in this case
+    # Delegate to regex-based parser for reliability with multi-block configs
+    # The pyparsing grammar above is kept for reference/future enhancements
     from lv_py.parser.logstash_parser_regex import parse_file_regex
 
     return parse_file_regex(file_path)

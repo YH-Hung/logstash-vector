@@ -7,7 +7,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/yourusername/lv-go/internal/validator"
+	"lv-go/internal/validator"
 )
 
 var validateCmd = &cobra.Command{

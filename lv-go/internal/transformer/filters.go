@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/yourusername/lv-go/internal/models"
+	"lv-go/internal/models"
 )
 
 // GrokFilterTransformer transforms Logstash grok filter to Vector remap transform
@@ -35,8 +35,12 @@ func (t *GrokFilterTransformer) Transform(plugin models.LogstashPlugin) (*models
 					patterns = p
 				}
 
-				// Build VRL pattern list
-				patternsStr := `["` + strings.Join(patterns, `", "`) + `"]`
+				// Build VRL pattern list (proper array syntax)
+				quotedPatterns := make([]string, len(patterns))
+				for i, p := range patterns {
+					quotedPatterns[i] = fmt.Sprintf(`"%s"`, p)
+				}
+				patternsStr := "[" + strings.Join(quotedPatterns, ", ") + "]"
 				vrlLines = append(vrlLines, fmt.Sprintf(". = parse_groks!(.%s, %s)", field, patternsStr))
 			}
 		}
@@ -169,11 +173,27 @@ func (t *DateFilterTransformer) Transform(plugin models.LogstashPlugin) (*models
 			sourceField := fmt.Sprint(matchList[0])
 			dateFormat := fmt.Sprint(matchList[1])
 
-			// Convert Logstash date format to strptime format
+			// Convert Logstash/Joda-Time date format to strptime format
 			formatMap := map[string]string{
-				"ISO8601": "%+",  // ISO 8601 format
-				"UNIX":    "%s",  // Unix timestamp
-				"UNIX_MS": "%s",  // Unix timestamp in milliseconds
+				// Special formats
+				"ISO8601": "%+", // ISO 8601 format
+				"UNIX":    "%s", // Unix timestamp
+				"UNIX_MS": "%s", // Unix timestamp in milliseconds
+
+				// Common Joda-Time patterns
+				"yyyy-MM-dd HH:mm:ss":        "%Y-%m-%d %H:%M:%S",
+				"yyyy-MM-dd'T'HH:mm:ss":      "%Y-%m-%dT%H:%M:%S",
+				"yyyy-MM-dd'T'HH:mm:ssZ":     "%Y-%m-%dT%H:%M:%S%z",
+				"yyyy-MM-dd'T'HH:mm:ss.SSSZ": "%Y-%m-%dT%H:%M:%S%.3f%z",
+				"dd/MMM/yyyy:HH:mm:ss Z":     "%d/%b/%Y:%H:%M:%S %z",
+				"MMM dd HH:mm:ss":            "%b %d %H:%M:%S",
+				"MMM dd yyyy HH:mm:ss":       "%b %d %Y %H:%M:%S",
+				"yyyy/MM/dd HH:mm:ss":        "%Y/%m/%d %H:%M:%S",
+				"dd-MM-yyyy HH:mm:ss":        "%d-%m-%Y %H:%M:%S",
+				"yyyy-MM-dd":                 "%Y-%m-%d",
+				"dd/MM/yyyy":                 "%d/%m/%Y",
+				"MM/dd/yyyy":                 "%m/%d/%Y",
+				"EEE MMM dd HH:mm:ss yyyy":   "%a %b %d %H:%M:%S %Y",
 			}
 
 			vrlFormat := formatMap[dateFormat]
@@ -193,10 +213,27 @@ func (t *DateFilterTransformer) Transform(plugin models.LogstashPlugin) (*models
 			sourceField := matchList[0]
 			dateFormat := matchList[1]
 
+			// Convert Logstash/Joda-Time date format to strptime format
 			formatMap := map[string]string{
-				"ISO8601": "%+",
-				"UNIX":    "%s",
-				"UNIX_MS": "%s",
+				// Special formats
+				"ISO8601": "%+", // ISO 8601 format
+				"UNIX":    "%s", // Unix timestamp
+				"UNIX_MS": "%s", // Unix timestamp in milliseconds
+
+				// Common Joda-Time patterns
+				"yyyy-MM-dd HH:mm:ss":        "%Y-%m-%d %H:%M:%S",
+				"yyyy-MM-dd'T'HH:mm:ss":      "%Y-%m-%dT%H:%M:%S",
+				"yyyy-MM-dd'T'HH:mm:ssZ":     "%Y-%m-%dT%H:%M:%S%z",
+				"yyyy-MM-dd'T'HH:mm:ss.SSSZ": "%Y-%m-%dT%H:%M:%S%.3f%z",
+				"dd/MMM/yyyy:HH:mm:ss Z":     "%d/%b/%Y:%H:%M:%S %z",
+				"MMM dd HH:mm:ss":            "%b %d %H:%M:%S",
+				"MMM dd yyyy HH:mm:ss":       "%b %d %Y %H:%M:%S",
+				"yyyy/MM/dd HH:mm:ss":        "%Y/%m/%d %H:%M:%S",
+				"dd-MM-yyyy HH:mm:ss":        "%d-%m-%Y %H:%M:%S",
+				"yyyy-MM-dd":                 "%Y-%m-%d",
+				"dd/MM/yyyy":                 "%d/%m/%Y",
+				"MM/dd/yyyy":                 "%m/%d/%Y",
+				"EEE MMM dd HH:mm:ss yyyy":   "%a %b %d %H:%M:%S %Y",
 			}
 
 			vrlFormat := formatMap[dateFormat]

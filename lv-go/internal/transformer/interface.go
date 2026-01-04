@@ -1,6 +1,6 @@
 package transformer
 
-import "github.com/yourusername/lv-go/internal/models"
+import "lv-go/internal/models"
 
 // Transformer defines the interface for transforming Logstash plugins to Vector components
 type Transformer interface {

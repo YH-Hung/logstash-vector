@@ -1,5 +1,7 @@
 """Output plugin transformers (Logstash outputs → Vector sinks)."""
 
+from typing import Any
+
 from lv_py.models import ComponentType
 from lv_py.models.logstash_config import LogstashPlugin
 from lv_py.models.vector_config import VectorComponent
@@ -33,7 +35,7 @@ class ElasticsearchOutputTransformer(BaseTransformer):
         """
         config = plugin.config
 
-        vector_config = {}
+        vector_config: dict[str, Any] = {}
 
         # Map hosts to endpoints
         if "hosts" in config:
@@ -53,7 +55,8 @@ class ElasticsearchOutputTransformer(BaseTransformer):
             vector_config["endpoints"] = ["http://localhost:9200"]
 
         # Set bulk mode (Vector default for Elasticsearch)
-        vector_config["mode"] = "bulk"
+        mode_value: str = "bulk"
+        vector_config["mode"] = mode_value
 
         # Map index (note: Vector uses different templating)
         if "index" in config:
@@ -61,18 +64,19 @@ class ElasticsearchOutputTransformer(BaseTransformer):
             # Logstash uses %{+FORMAT} for date formatting
             # Vector doesn't support this directly - use static index or add comment
             if "%{" in index:
-                comments_note = f"TODO: Logstash index template '{index}' needs manual conversion to Vector template syntax"
+                # Comment will be added below at lines 78-81
                 vector_config["index"] = index.split("%{")[0].rstrip("-")  # Use base name
             else:
                 vector_config["index"] = index
 
         # Handle authentication
         if "user" in config or "password" in config:
-            vector_config["auth"] = {
+            auth_config: dict[str, str] = {
                 "strategy": "basic",
                 "user": config.get("user", "elastic"),
                 "password": config.get("password", ""),
             }
+            vector_config["auth"] = auth_config
 
         comments = []
         if "index" in config and "%{" in config["index"]:
@@ -111,7 +115,7 @@ class FileOutputTransformer(BaseTransformer):
         """
         config = plugin.config
 
-        vector_config = {}
+        vector_config: dict[str, Any] = {}
 
         # Map path
         if "path" in config:

@@ -147,8 +147,6 @@ def parse_file_regex(file_path: Path) -> LogstashConfiguration:
     blocks = _extract_blocks(raw_content)
 
     for block_type, block_content, block_start in blocks:
-        line_number = raw_content[:block_start].count('\n') + 1
-
         # Parse plugins within the block
         plugins = _extract_plugins(block_content, block_start, raw_content)
 

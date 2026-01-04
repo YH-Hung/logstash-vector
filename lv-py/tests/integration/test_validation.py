@@ -19,7 +19,7 @@ class TestDryRunMode:
         temp_output_dir: Path,
     ):
         """Test that dry-run mode does not write any files."""
-        from lv_py.cli import migrate_directory
+        from lv_py.api import migrate_directory
 
         # Run migration in dry-run mode
         result = migrate_directory(
@@ -42,7 +42,7 @@ class TestDryRunMode:
         temp_output_dir: Path,
     ):
         """Test that dry-run mode shows preview of what would be migrated."""
-        from lv_py.cli import migrate_directory
+        from lv_py.api import migrate_directory
 
         # Use a simple config for testing
         test_conf = logstash_samples_dir / "file-input.conf"
@@ -73,7 +73,7 @@ class TestDryRunMode:
         temp_output_dir: Path,
     ):
         """Test dry-run mode with configs containing unsupported features."""
-        from lv_py.cli import migrate_directory
+        from lv_py.api import migrate_directory
 
         # Use config with unsupported features
         test_conf = logstash_samples_dir / "unsupported-input.conf"
@@ -102,7 +102,7 @@ class TestValidateCommand:
         vector_samples_dir: Path,
     ):
         """Test validation of valid Vector configs."""
-        from lv_py.cli import validate_configs
+        from lv_py.api import validate_configs
 
         # Use a known valid config
         valid_toml = vector_samples_dir / "file-input.toml"
@@ -118,7 +118,7 @@ class TestValidateCommand:
         temp_output_dir: Path,
     ):
         """Test validation of invalid Vector configs."""
-        from lv_py.cli import validate_configs
+        from lv_py.api import validate_configs
 
         # Create an invalid config
         invalid_toml = temp_output_dir / "invalid.toml"
@@ -142,7 +142,7 @@ invalid_field = "value"
         temp_output_dir: Path,
     ):
         """Test validation of multiple Vector configs."""
-        from lv_py.cli import validate_configs
+        from lv_py.api import validate_configs
 
         # Mix of valid and invalid configs
         valid_toml = vector_samples_dir / "file-input.toml"
@@ -167,7 +167,7 @@ invalid_field = "value"
         vector_samples_dir: Path,
     ):
         """Test validation with glob pattern for multiple files."""
-        from lv_py.cli import validate_configs
+        from lv_py.api import validate_configs
 
         # Validate all .toml files in directory
         result = validate_configs(
@@ -188,7 +188,7 @@ class TestDiffCommand:
         vector_samples_dir: Path,
     ):
         """Test basic diff between Logstash and Vector configs."""
-        from lv_py.cli import diff_configs
+        from lv_py.api import diff_configs
 
         logstash_conf = logstash_samples_dir / "file-input.conf"
         vector_toml = vector_samples_dir / "file-input.toml"
@@ -212,7 +212,7 @@ class TestDiffCommand:
         vector_samples_dir: Path,
     ):
         """Test diff with filter transformations."""
-        from lv_py.cli import diff_configs
+        from lv_py.api import diff_configs
 
         logstash_conf = logstash_samples_dir / "grok-filter.conf"
         vector_toml = vector_samples_dir / "grok-filter.toml"
@@ -235,7 +235,7 @@ class TestDiffCommand:
         vector_samples_dir: Path,
     ):
         """Test that diff highlights unsupported features."""
-        from lv_py.cli import diff_configs
+        from lv_py.api import diff_configs
 
         logstash_conf = logstash_samples_dir / "mixed-support.conf"
         vector_toml = vector_samples_dir / "mixed-support.toml"
@@ -260,7 +260,7 @@ class TestDiffCommand:
         vector_samples_dir: Path,
     ):
         """Test that diff produces readable side-by-side output."""
-        from lv_py.cli import diff_configs
+        from lv_py.api import diff_configs
 
         logstash_conf = logstash_samples_dir / "file-input.conf"
         vector_toml = vector_samples_dir / "file-input.toml"

@@ -1,6 +1,6 @@
 """Migration report models."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import BaseModel, Field
@@ -44,7 +44,7 @@ class MigrationReport(BaseModel):
 
     source_file: Path
     target_file: Path
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     supported_plugins: list[PluginMigration] = Field(default_factory=list)
     unsupported_plugins: list[UnsupportedPlugin] = Field(default_factory=list)
     errors: list[MigrationError] = Field(default_factory=list)

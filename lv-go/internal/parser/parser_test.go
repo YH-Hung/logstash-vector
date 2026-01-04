@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/yourusername/lv-go/internal/models"
+	"lv-go/internal/models"
 )
 
 func TestParseFile(t *testing.T) {

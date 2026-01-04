@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/yourusername/lv-go/internal/models"
+	"lv-go/internal/models"
 )
 
 // block represents a top-level block in the Logstash config

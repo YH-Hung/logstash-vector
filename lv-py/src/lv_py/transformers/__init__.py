@@ -1,7 +1,5 @@
 """Transformers for converting Logstash plugins to Vector components."""
 
-from typing import Any
-
 from lv_py.models import ComponentType, PluginType
 from lv_py.models.logstash_config import LogstashConfiguration, LogstashPlugin
 from lv_py.models.migration_report import (

@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/yourusername/lv-go/internal/models"
+	"lv-go/internal/models"
 )
 
 // WriteReport writes a migration report to a file
