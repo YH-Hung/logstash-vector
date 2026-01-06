@@ -134,11 +134,14 @@ def migrate_config(
             component = transformer.transform(filter_plugin)
             component_id = f"{filter_plugin.plugin_name}_filter_{idx}"
 
-            # Set inputs to previous stage (sources or previous transforms)
+            # Chain transforms: each transform reads from the previous one
+            # First transform reads from all sources, subsequent transforms read from previous transform
             if transform_ids:
+                # Connect to immediately previous transform only (proper chaining)
                 component.inputs = [transform_ids[-1]]
             else:
-                component.inputs = source_ids
+                # First transform: connect to all sources
+                component.inputs = source_ids.copy()
 
             transforms[component_id] = component
             transform_ids.append(component_id)
@@ -182,11 +185,13 @@ def migrate_config(
             component = transformer.transform(output_plugin)
             component_id = f"{output_plugin.plugin_name}_output_{idx}"
 
-            # Set inputs to last stage (transforms or sources)
+            # Sinks read from last transform or all sources if no transforms
             if transform_ids:
+                # If transforms exist, read from the last transform in the chain
                 component.inputs = [transform_ids[-1]]
             else:
-                component.inputs = source_ids
+                # No transforms: sinks read directly from all sources
+                component.inputs = source_ids.copy()
 
             sinks[component_id] = component
 

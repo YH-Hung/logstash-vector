@@ -190,56 +190,226 @@ def parse_file_regex(file_path: Path) -> LogstashConfiguration:
 
 
 def _parse_config(content: str) -> dict[str, Any]:
-    """Parse configuration key => value pairs."""
+    """Parse configuration key => value pairs with proper nested structure support."""
     config: dict[str, Any] = {}
 
-    # Pattern for key => value
-    # Handles: key => "value", key => [array], key => { nested }
-    kv_pattern = r'(\w+)\s*=>\s*(.+?)(?=\s+\w+\s*=>|$)'
+    i = 0
+    while i < len(content):
+        # Skip whitespace and comments
+        while i < len(content) and content[i] in ' \t\n':
+            i += 1
 
-    for match in re.finditer(kv_pattern, content, re.DOTALL):
-        key = match.group(1)
-        value_str = match.group(2).strip()
+        if i >= len(content):
+            break
 
-        # Parse the value
-        value = _parse_value(value_str)
-        config[key] = value
+        key = None
+
+        # Match quoted key (e.g., "message" or 'message')
+        if content[i] in ('"', "'"):
+            quote_char = content[i]
+            i += 1
+            key_start = i
+            # Find closing quote
+            while i < len(content) and content[i] != quote_char:
+                if content[i] == '\\' and i + 1 < len(content):
+                    i += 2  # Skip escaped character
+                else:
+                    i += 1
+            key = content[key_start:i]
+            if i < len(content):
+                i += 1  # Skip closing quote
+
+        # Match unquoted key (e.g., match or codec)
+        elif content[i].isalpha() or content[i] == '_':
+            key_start = i
+            while i < len(content) and (content[i].isalnum() or content[i] == '_'):
+                i += 1
+            key = content[key_start:i]
+
+        # If we found a key, look for '=>' and parse value
+        if key is not None:
+            # Skip whitespace
+            while i < len(content) and content[i] in ' \t\n':
+                i += 1
+
+            # Expect '=>'
+            if i + 1 < len(content) and content[i:i+2] == '=>':
+                i += 2
+
+                # Skip whitespace
+                while i < len(content) and content[i] in ' \t\n':
+                    i += 1
+
+                # Extract value using brace/bracket counting
+                value_start = i
+                value_end = _find_value_end(content, i)
+                value_str = content[value_start:value_end].strip()
+
+                # Parse the value
+                value = _parse_value(value_str)
+                config[key] = value
+
+                i = value_end
+            else:
+                i += 1
+        else:
+            i += 1
 
     return config
 
 
+def _find_value_end(content: str, start: int) -> int:
+    """
+    Find the end of a value by counting braces/brackets and looking for terminators.
+
+    Values end at:
+    - A comma or newline (if not inside braces/brackets/quotes)
+    - The next key => pattern (if not inside braces/brackets/quotes)
+    - End of content
+    """
+    i = start
+    brace_depth = 0
+    bracket_depth = 0
+    in_quotes = False
+    quote_char = None
+
+    while i < len(content):
+        char = content[i]
+
+        # Handle quotes
+        if char in ('"', "'") and (i == 0 or content[i-1] != '\\'):
+            if not in_quotes:
+                in_quotes = True
+                quote_char = char
+            elif char == quote_char:
+                in_quotes = False
+                quote_char = None
+
+        # Only count braces/brackets outside quotes
+        if not in_quotes:
+            if char == '{':
+                brace_depth += 1
+            elif char == '}':
+                brace_depth -= 1
+            elif char == '[':
+                bracket_depth += 1
+            elif char == ']':
+                bracket_depth -= 1
+
+            # Check for value termination
+            if brace_depth == 0 and bracket_depth == 0:
+                # Look ahead for next key => pattern
+                remaining = content[i:]
+                next_key_match = re.search(r'\s+\w+\s*=>', remaining)
+                if next_key_match:
+                    # Found next key, value ends before it
+                    return i + next_key_match.start()
+
+                # Check for comma or end of line (simple terminator)
+                if char == '\n':
+                    # Check if there's more content after whitespace
+                    j = i + 1
+                    while j < len(content) and content[j] in ' \t\n':
+                        j += 1
+                    # If next non-whitespace is a key or closing brace, end here
+                    if j < len(content) and (content[j].isalpha() or content[j] == '}'):
+                        return i
+
+        i += 1
+
+    return i
+
+
 def _parse_value(value_str: str) -> Any:
-    """Parse a configuration value."""
+    """Parse a configuration value with support for nested structures."""
     value_str = value_str.strip().rstrip(',')
+
+    if not value_str:
+        return ""
 
     # String value
     if value_str.startswith('"') or value_str.startswith("'"):
-        return value_str.strip('"').strip("'")
+        # Remove quotes and handle escaped quotes
+        return value_str[1:-1] if len(value_str) >= 2 else value_str
 
     # Array value
     if value_str.startswith('['):
-        array_content = value_str.strip('[]')
+        if not value_str.endswith(']'):
+            # Handle incomplete array - find the closing bracket
+            end_bracket = value_str.rfind(']')
+            if end_bracket > 0:
+                value_str = value_str[:end_bracket+1]
+
+        array_content = value_str[1:-1].strip()
+        if not array_content:
+            return []
+
         items = []
-        for item in re.split(r',\s*', array_content):
-            items.append(item.strip('"').strip("'"))
+        i = 0
+        current_item = []
+
+        # Parse array items respecting quotes
+        in_quotes = False
+        quote_char = None
+
+        while i < len(array_content):
+            char = array_content[i]
+
+            if char in ('"', "'") and (i == 0 or array_content[i-1] != '\\'):
+                if not in_quotes:
+                    in_quotes = True
+                    quote_char = char
+                elif char == quote_char:
+                    in_quotes = False
+                    quote_char = None
+
+            if char == ',' and not in_quotes:
+                # End of item
+                item_str = ''.join(current_item).strip()
+                if item_str:
+                    items.append(_parse_value(item_str))
+                current_item = []
+            else:
+                current_item.append(char)
+
+            i += 1
+
+        # Don't forget last item
+        item_str = ''.join(current_item).strip()
+        if item_str:
+            items.append(_parse_value(item_str))
+
         return items
 
-    # Hash/object value (simplified - just store as string for now)
+    # Hash/object value - recursively parse
     if value_str.startswith('{'):
-        # For hashes like { "field" => "pattern" }, parse as dict
-        hash_dict: dict[str, Any] = {}
-        hash_content = value_str.strip('{}')
-        for kv_match in re.finditer(r'"([^"]+)"\s*=>\s*"([^"]+)"', hash_content):
-            hash_dict[kv_match.group(1)] = kv_match.group(2)
-        return hash_dict if hash_dict else value_str
+        if not value_str.endswith('}'):
+            # Handle incomplete hash
+            end_brace = value_str.rfind('}')
+            if end_brace > 0:
+                value_str = value_str[:end_brace+1]
+
+        hash_content = value_str[1:-1].strip()
+        if not hash_content:
+            return {}
+
+        # Recursively parse hash content
+        return _parse_config(hash_content)
 
     # Boolean
     if value_str.lower() in ('true', 'false'):
         return value_str.lower() == 'true'
 
-    # Number
+    # Number (integer)
     if value_str.isdigit():
         return int(value_str)
+
+    # Number (float)
+    try:
+        if '.' in value_str:
+            return float(value_str)
+    except ValueError:
+        pass
 
     # Default: return as string
     return value_str

@@ -150,7 +150,13 @@ type MigrationResult struct {
 func (mr *MigrationResult) AddReport(report MigrationReport) {
 	mr.Reports = append(mr.Reports, report)
 	mr.TotalFiles++
-	if len(report.Errors) == 0 {
+
+	// Consider it a success only if:
+	// 1. No errors occurred, AND
+	// 2. At least one plugin was successfully migrated
+	//
+	// Files with zero errors but zero supported plugins (all unsupported) are partial failures
+	if len(report.Errors) == 0 && len(report.SupportedPlugins) > 0 {
 		mr.SuccessCount++
 	} else {
 		mr.FailureCount++

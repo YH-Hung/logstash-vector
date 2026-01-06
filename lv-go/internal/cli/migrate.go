@@ -57,7 +57,7 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 	}
 
 	// Run migration
-	result, err := api.MigrateDirectory(directory, outputDir, dryRun, doValidate)
+	result, err := api.MigrateDirectory(directory, outputDir, reportPath, dryRun, doValidate)
 	if err != nil {
 		return err
 	}

@@ -15,12 +15,19 @@ import pytest
 @pytest.fixture(scope="session")
 def test_data_dir() -> Path:
     """Return path to test data directory."""
-    return Path(__file__).parent / "test_data"
+    # Use shared test-data directory at project root
+    return Path(__file__).parent.parent.parent.parent / "test-data"
+
+
+@pytest.fixture(scope="session")
+def logstash_configs_dir(test_data_dir: Path) -> Path:
+    """Return path to Logstash test configurations."""
+    return test_data_dir / "logstash"
 
 
 @pytest.fixture(scope="session")
 def logstash_samples_dir(test_data_dir: Path) -> Path:
-    """Return path to Logstash sample configurations."""
+    """Return path to Logstash sample configurations (alias for compatibility)."""
     return test_data_dir / "logstash"
 
 

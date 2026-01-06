@@ -225,7 +225,7 @@ func MigrateConfig(logstashConfPath, outputPath string) (*models.VectorConfigura
 }
 
 // MigrateDirectory migrates all .conf files in a directory
-func MigrateDirectory(directory, outputDir string, dryRun, validate bool) (*models.MigrationResult, error) {
+func MigrateDirectory(directory, outputDir, reportPath string, dryRun, validate bool) (*models.MigrationResult, error) {
 	// Find all .conf files
 	confFiles, err := utils.FindConfFiles(directory)
 	if err != nil {
@@ -325,12 +325,16 @@ func MigrateDirectory(directory, outputDir string, dryRun, validate bool) (*mode
 
 	// Write combined report (unless dry-run)
 	if !dryRun {
-		reportPath := filepath.Join(directory, "migration-report.md")
-		if outputDir != "" {
-			reportPath = filepath.Join(outputDir, "migration-report.md")
+		// Use custom report path if provided, otherwise default to directory/migration-report.md
+		finalReportPath := reportPath
+		if finalReportPath == "" {
+			finalReportPath = filepath.Join(directory, "migration-report.md")
+			if outputDir != "" {
+				finalReportPath = filepath.Join(outputDir, "migration-report.md")
+			}
 		}
 
-		if err := report.WriteCombinedReport(result.Reports, reportPath); err != nil {
+		if err := report.WriteCombinedReport(result.Reports, finalReportPath); err != nil {
 			return result, fmt.Errorf("failed to write migration report: %w", err)
 		}
 	}

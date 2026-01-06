@@ -1,0 +1,30 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+RUN pip install uv
+
+# Copy project files
+COPY pyproject.toml uv.lock ./
+COPY src ./src
+COPY tests ./tests
+
+# Install dependencies
+RUN uv sync --frozen
+
+# Install Vector for validation tests
+RUN curl -sSfL https://sh.vector.dev | bash -s -- -y
+ENV PATH="/root/.vector/bin:${PATH}"
+
+# Set environment variables
+ENV PYTHONPATH=/app/src
+ENV LV_PY_NONINTERACTIVE=1
+
+CMD ["uv", "run", "pytest", "tests/integration", "-v", "--tb=short", "--color=yes"]

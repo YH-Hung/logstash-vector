@@ -1,5 +1,7 @@
 """Filter plugin transformers (Logstash filters → Vector transforms)."""
 
+import json
+
 from lv_py.models import ComponentType
 from lv_py.models.logstash_config import LogstashPlugin
 from lv_py.models.vector_config import VectorComponent
@@ -38,8 +40,11 @@ class GrokFilterTransformer(BaseTransformer):
             for field, pattern in match_config.items():
                 # Convert pattern to list if it's a string
                 patterns = [pattern] if isinstance(pattern, str) else pattern
-                patterns_str = str(patterns)
-                vrl_lines.append(f". = parse_groks!(.{field}, {patterns_str})")
+                # Use json.dumps to get proper JSON array syntax with double quotes
+                patterns_json = json.dumps(patterns)
+                # Store parsed result in variable, then merge fields to preserve existing data
+                vrl_lines.append(f"parsed_{field}, err = parse_groks(.{field}, patterns: {patterns_json})")
+                vrl_lines.append(f"if err == null {{ . = merge(., parsed_{field}) }}")
 
         # If no match config, add a comment
         if not vrl_lines:
@@ -119,14 +124,20 @@ class MutateFilterTransformer(BaseTransformer):
             converts = config["convert"]
             if isinstance(converts, dict):
                 for field_name, target_type in converts.items():
-                    type_map = {
-                        "integer": "int",
-                        "float": "float",
-                        "string": "string",
-                        "boolean": "bool",
-                    }
-                    vrl_type = type_map.get(target_type, "string")
-                    vrl_lines.append(f".{field_name} = to_{vrl_type}!(.{field_name})")
+                    # Map Logstash types to VRL conversion functions
+                    if target_type == "integer":
+                        vrl_lines.append(f".{field_name} = to_int!(.{field_name})")
+                    elif target_type == "float":
+                        vrl_lines.append(f".{field_name} = to_float!(.{field_name})")
+                    elif target_type == "string":
+                        vrl_lines.append(f".{field_name} = to_string!(.{field_name})")
+                    elif target_type == "boolean" or target_type == "bool":
+                        # VRL doesn't have to_bool!(), use comparison logic
+                        vrl_lines.append(f'.{field_name} = to_string!(.{field_name}) == "true"')
+                    else:
+                        # Unknown type, default to string with comment
+                        vrl_lines.append(f"# TODO: Unsupported type conversion '{target_type}' for field {field_name}")
+                        vrl_lines.append(f".{field_name} = to_string!(.{field_name})")
 
         if not vrl_lines:
             vrl_lines.append("# TODO: Add mutate operations")

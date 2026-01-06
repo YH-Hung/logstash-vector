@@ -117,7 +117,8 @@ def migrate_directory(
 
                     # Validate if requested
                     if validate:
-                        is_valid, error_msg = validate_vector_config(output_path)
+                        # skip_if_missing=False means fail if Vector CLI not found
+                        is_valid, error_msg = validate_vector_config(output_path, skip_if_missing=False)
                         if not is_valid:
                             # Add validation error to report
                             validation_error = MigrationError(
@@ -174,7 +175,8 @@ def validate_configs(
 
     # Validate each file
     for file_path in all_files:
-        is_valid, error_msg = validate_vector_config(file_path)
+        # Explicit validation command should fail if Vector CLI missing
+        is_valid, error_msg = validate_vector_config(file_path, skip_if_missing=False)
 
         validation_result = ValidationResult(
             file_path=file_path,
