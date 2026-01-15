@@ -1,0 +1,3 @@
+000005   [a027d5c0-8560-49e7-8f82-70901077a4bf] COrbMsgBus::OrbSrvRecvfun(): Receive 608 bytes
+000006   [a027d5c0-8560-49e7-8f82-70901077a4bf] [TRACE] before SysUuid::set(): curSysUuid=a027d5c0-8560-49e7-8f82-70901077a4bf, preSysUuid=
+000007   [8e475fe2-0680-41f2-b734-20cd691d05f9] [TRACE] after SysUuid::set(): curSysUuid=8e475fe2-0680-41f2-b734-20cd691d05f9, preSysUuid=a027d5c0-8560-49e7-8f82-70901077a4bf
