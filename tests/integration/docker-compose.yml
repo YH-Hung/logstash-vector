@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+    container_name: logstash-vector-es
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    networks:
+      - testing
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.0
+    container_name: logstash-vector-baseline
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./data/samples:/app/log:ro
+      - ./output:/output
+    environment:
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - POD_NAMESPACE=test-namespace
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - testing
+    command: >
+      bash -c "
+        # Wait a bit more to ensure ES is fully ready
+        sleep 10
+        # Run logstash
+        /usr/local/bin/docker-entrypoint
+      "
+
+networks:
+  testing:
+    driver: bridge

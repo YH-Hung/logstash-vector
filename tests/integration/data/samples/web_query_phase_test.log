@@ -1,0 +1,6 @@
+[2026-01-17 10:15:22:100]   [test-uuid-001] [TRACE] before SysUuid::set(): curSysUuid=test-uuid-001, preSysUuid=
+[2026-01-17 10:15:22:150]   [test-uuid-002] Rep_DisplayInfo product:"TMEF78" layer:"376A-M001" maskGroupId:"TMEF78-376A-M001" maskLotId:"EBGN29J.1" IsQueryPhase:"Y"
+[2026-01-17 10:15:23:100]   [test-uuid-003] [TRACE] before SysUuid::set(): curSysUuid=test-uuid-003, preSysUuid=test-uuid-002
+[2026-01-17 10:15:23:200]   [test-uuid-004] Rep_DisplayInfo product:"TEST123" layer:"L001" maskGroupId:"TEST123-L001" maskLotId:"LOT001" rqstType:"QUERY_PHASE"
+[2026-01-17 10:15:24:100]   [test-uuid-005] [TRACE] before SysUuid::set(): curSysUuid=test-uuid-005, preSysUuid=test-uuid-004
+[2026-01-17 10:15:24:200]   [test-uuid-006] Rep_DisplayInfo product:"NORMAL" layer:"NL001" maskGroupId:"NORMAL-NL001" maskLotId:"NL-LOT" IsQueryPhase:"N"
