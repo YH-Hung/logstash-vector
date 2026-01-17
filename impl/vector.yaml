@@ -14,7 +14,8 @@ sources:
       timeout_ms: 1000
 
 transforms:
-  parse_fields:
+  # Step 1: Static field enrichment
+  enrich_static:
     type: remap
     inputs:
       - ap_log_files
@@ -22,6 +23,12 @@ transforms:
       .system = "legendary"
       .type = "ap_log"
 
+  # Step 2: Extract filename from path
+  parse_filename:
+    type: remap
+    inputs:
+      - enrich_static
+    source: |
       if !is_null(.path) && is_string(.path) {
         filename_parsed, _ = parse_grok(.path, "%{GREEDYDATA}/%{NOTSPACE:filename}")
         if filename_parsed != null && filename_parsed.filename != null {
@@ -29,6 +36,12 @@ transforms:
         }
       }
 
+  # Step 3: Extract product and layer from message
+  parse_core_fields:
+    type: remap
+    inputs:
+      - parse_filename
+    source: |
       if !is_null(.message) && is_string(.message) {
         message_value = .message
         parsed, _ = parse_grok(message_value, ".*(?i)product:\"%{NOTSPACE:product}\"")
@@ -40,6 +53,16 @@ transforms:
         if parsed != null && parsed.layer != null {
           .layer = parsed.layer
         }
+      }
+
+  # Step 4: Extract maskGroupId with multiple fallback patterns
+  parse_mask_group_id:
+    type: remap
+    inputs:
+      - parse_core_fields
+    source: |
+      if !is_null(.message) && is_string(.message) {
+        message_value = .message
 
         if is_null(.maskGroupId) {
           parsed, _ = parse_grok(message_value, ".*(?i)mask_?group_?id:\"%{NOTSPACE:maskGroupId}\"")
@@ -75,6 +98,16 @@ transforms:
             .maskGroupId = parsed.maskGroupId
           }
         }
+      }
+
+  # Step 5: Extract Action field (may also extract maskGroupId)
+  parse_action:
+    type: remap
+    inputs:
+      - parse_mask_group_id
+    source: |
+      if !is_null(.message) && is_string(.message) {
+        message_value = .message
 
         if is_null(.Action) {
           parsed, _ = parse_grok(message_value, ".*(?i)Action:\"%{NOTSPACE:Action}:%{NOTSPACE:maskGroupId}\"")
@@ -92,6 +125,16 @@ transforms:
             .Action = parsed.Action
           }
         }
+      }
+
+  # Step 6: Extract maskLotId with multiple fallback patterns
+  parse_mask_lot_id:
+    type: remap
+    inputs:
+      - parse_action
+    source: |
+      if !is_null(.message) && is_string(.message) {
+        message_value = .message
 
         if is_null(.maskLotId) {
           parsed, _ = parse_grok(message_value, ".*(?i)mask_?lot_?id:\"%{NOTSPACE:maskLotId}\"")
@@ -120,6 +163,16 @@ transforms:
             .maskLotId = parsed.maskLotId
           }
         }
+      }
+
+  # Step 7: Extract remaining fields (MaskListNo, rqstType, IsQueryPhase, etc.)
+  parse_other_fields:
+    type: remap
+    inputs:
+      - parse_mask_lot_id
+    source: |
+      if !is_null(.message) && is_string(.message) {
+        message_value = .message
 
         if is_null(.MaskListNo) {
           parsed, _ = parse_grok(message_value, "MaskListNo=%{NUMBER:MaskListNo}")
@@ -164,6 +217,12 @@ transforms:
         }
       }
 
+  # Step 8: Derive fields, type conversions, and query phase cleanup
+  derive_and_cleanup:
+    type: remap
+    inputs:
+      - parse_other_fields
+    source: |
       if is_null(.maskGroupId) {
         .MGtag = "null"
       }
@@ -214,7 +273,7 @@ sinks:
   elasticsearch_output:
     type: elasticsearch
     inputs:
-      - parse_fields
+      - derive_and_cleanup
     endpoints:
       - http://elasticsearch-fz1.engmon.svc.cluster.local:9200
     auth:
@@ -239,19 +298,525 @@ sinks:
       enabled: false
 
 tests:
-  - name: "Unit: parse core fields"
+  # ============================================================================
+  # Step 1: enrich_static tests
+  # ============================================================================
+  - name: "Unit: enrich_static - sets system and type"
     inputs:
-      - insert_at: parse_fields
+      - insert_at: enrich_static
+        type: log
+        log_fields:
+          message: "test message"
+    outputs:
+      - extract_from: enrich_static
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.system, "legendary")
+              assert_eq!(.type, "ap_log")
+              assert_eq!(.message, "test message")
+
+  - name: "Unit: enrich_static - preserves existing fields"
+    inputs:
+      - insert_at: enrich_static
+        type: log
+        log_fields:
+          message: "test message"
+          custom_field: "custom_value"
+    outputs:
+      - extract_from: enrich_static
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.system, "legendary")
+              assert_eq!(.type, "ap_log")
+              assert_eq!(.custom_field, "custom_value")
+
+  # ============================================================================
+  # Step 2: parse_filename tests
+  # ============================================================================
+  - name: "Unit: parse_filename - extracts filename from path"
+    inputs:
+      - insert_at: parse_filename
+        type: log
+        log_fields:
+          path: "/app/log/web_hmib_1.log"
+    outputs:
+      - extract_from: parse_filename
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.filename, "web_hmib_1.log")
+
+  - name: "Unit: parse_filename - handles missing path"
+    inputs:
+      - insert_at: parse_filename
+        type: log
+        log_fields:
+          message: "no path field"
+    outputs:
+      - extract_from: parse_filename
+        conditions:
+          - type: vrl
+            source: |
+              assert!(!exists(.filename))
+
+  - name: "Unit: parse_filename - handles nested path"
+    inputs:
+      - insert_at: parse_filename
+        type: log
+        log_fields:
+          path: "/var/log/app/nested/web_test.log"
+    outputs:
+      - extract_from: parse_filename
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.filename, "web_test.log")
+
+  # ============================================================================
+  # Step 3: parse_core_fields tests
+  # ============================================================================
+  - name: "Unit: parse_core_fields - extracts product and layer"
+    inputs:
+      - insert_at: parse_core_fields
+        type: log
+        log_fields:
+          message: 'product:"TMEF78" layer:"376A-M001"'
+    outputs:
+      - extract_from: parse_core_fields
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.product, "TMEF78")
+              assert_eq!(.layer, "376A-M001")
+
+  - name: "Unit: parse_core_fields - handles missing message"
+    inputs:
+      - insert_at: parse_core_fields
+        type: log
+        log_fields:
+          path: "/app/log/web_test.log"
+    outputs:
+      - extract_from: parse_core_fields
+        conditions:
+          - type: vrl
+            source: |
+              assert!(!exists(.product))
+              assert!(!exists(.layer))
+
+  - name: "Unit: parse_core_fields - case insensitive matching"
+    inputs:
+      - insert_at: parse_core_fields
+        type: log
+        log_fields:
+          message: 'PRODUCT:"ABC123" LAYER:"XYZ"'
+    outputs:
+      - extract_from: parse_core_fields
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.product, "ABC123")
+              assert_eq!(.layer, "XYZ")
+
+  # ============================================================================
+  # Step 4: parse_mask_group_id tests
+  # ============================================================================
+  - name: "Unit: parse_mask_group_id - pattern mask_group_id"
+    inputs:
+      - insert_at: parse_mask_group_id
+        type: log
+        log_fields:
+          message: 'mask_group_id:"TMEF78-376A-M001"'
+    outputs:
+      - extract_from: parse_mask_group_id
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.maskGroupId, "TMEF78-376A-M001")
+
+  - name: "Unit: parse_mask_group_id - pattern maskGroupId->"
+    inputs:
+      - insert_at: parse_mask_group_id
+        type: log
+        log_fields:
+          message: 'maskGroupId-> MG001'
+    outputs:
+      - extract_from: parse_mask_group_id
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.maskGroupId, "MG001")
+
+  - name: "Unit: parse_mask_group_id - pattern reticleId"
+    inputs:
+      - insert_at: parse_mask_group_id
+        type: log
+        log_fields:
+          message: 'reticleId="MG002">'
+    outputs:
+      - extract_from: parse_mask_group_id
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.maskGroupId, "MG002")
+
+  - name: "Unit: parse_mask_group_id - pattern reticle_id"
+    inputs:
+      - insert_at: parse_mask_group_id
+        type: log
+        log_fields:
+          message: 'reticle_id:"MG003"'
+    outputs:
+      - extract_from: parse_mask_group_id
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.maskGroupId, "MG003")
+
+  - name: "Unit: parse_mask_group_id - pattern reticlelotid"
+    inputs:
+      - insert_at: parse_mask_group_id
+        type: log
+        log_fields:
+          message: 'reticlelotid -> MG004'
+    outputs:
+      - extract_from: parse_mask_group_id
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.maskGroupId, "MG004")
+
+  - name: "Unit: parse_mask_group_id - no match"
+    inputs:
+      - insert_at: parse_mask_group_id
+        type: log
+        log_fields:
+          message: 'no maskGroupId here'
+    outputs:
+      - extract_from: parse_mask_group_id
+        conditions:
+          - type: vrl
+            source: |
+              assert!(!exists(.maskGroupId))
+
+  - name: "Unit: parse_mask_group_id - preserves existing maskGroupId"
+    inputs:
+      - insert_at: parse_mask_group_id
+        type: log
+        log_fields:
+          message: 'mask_group_id:"NEW_VALUE"'
+          maskGroupId: "EXISTING_VALUE"
+    outputs:
+      - extract_from: parse_mask_group_id
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.maskGroupId, "EXISTING_VALUE")
+
+  # ============================================================================
+  # Step 5: parse_action tests
+  # ============================================================================
+  - name: "Unit: parse_action - action with maskGroupId"
+    inputs:
+      - insert_at: parse_action
+        type: log
+        log_fields:
+          message: 'Action:"CREATE:MG001"'
+    outputs:
+      - extract_from: parse_action
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.Action, "CREATE")
+              assert_eq!(.maskGroupId, "MG001")
+
+  - name: "Unit: parse_action - action only"
+    inputs:
+      - insert_at: parse_action
+        type: log
+        log_fields:
+          message: 'Action:"DELETE"'
+    outputs:
+      - extract_from: parse_action
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.Action, "DELETE")
+
+  - name: "Unit: parse_action - no match"
+    inputs:
+      - insert_at: parse_action
+        type: log
+        log_fields:
+          message: 'no action here'
+    outputs:
+      - extract_from: parse_action
+        conditions:
+          - type: vrl
+            source: |
+              assert!(!exists(.Action))
+
+  - name: "Unit: parse_action - preserves existing maskGroupId"
+    inputs:
+      - insert_at: parse_action
+        type: log
+        log_fields:
+          message: 'Action:"UPDATE:NEW_MG"'
+          maskGroupId: "EXISTING_MG"
+    outputs:
+      - extract_from: parse_action
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.Action, "UPDATE")
+              assert_eq!(.maskGroupId, "EXISTING_MG")
+
+  # ============================================================================
+  # Step 6: parse_mask_lot_id tests
+  # ============================================================================
+  - name: "Unit: parse_mask_lot_id - pattern mask_lot_id"
+    inputs:
+      - insert_at: parse_mask_lot_id
+        type: log
+        log_fields:
+          message: 'mask_lot_id:"EBGN29J.1"'
+    outputs:
+      - extract_from: parse_mask_lot_id
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.maskLotId, "EBGN29J.1")
+
+  - name: "Unit: parse_mask_lot_id - pattern maskLotId->"
+    inputs:
+      - insert_at: parse_mask_lot_id
+        type: log
+        log_fields:
+          message: 'maskLotId->ML001'
+    outputs:
+      - extract_from: parse_mask_lot_id
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.maskLotId, "ML001")
+
+  - name: "Unit: parse_mask_lot_id - pattern maskLotId-> with space"
+    inputs:
+      - insert_at: parse_mask_lot_id
+        type: log
+        log_fields:
+          message: 'maskLotId-> ML002'
+    outputs:
+      - extract_from: parse_mask_lot_id
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.maskLotId, "ML002")
+
+  - name: "Unit: parse_mask_lot_id - pattern MASKLOTID ="
+    inputs:
+      - insert_at: parse_mask_lot_id
+        type: log
+        log_fields:
+          message: "MASKLOTID = 'EBGN29J.1'"
+    outputs:
+      - extract_from: parse_mask_lot_id
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.maskLotId, "EBGN29J.1")
+
+  - name: "Unit: parse_mask_lot_id - no match"
+    inputs:
+      - insert_at: parse_mask_lot_id
+        type: log
+        log_fields:
+          message: 'no maskLotId here'
+    outputs:
+      - extract_from: parse_mask_lot_id
+        conditions:
+          - type: vrl
+            source: |
+              assert!(!exists(.maskLotId))
+
+  # ============================================================================
+  # Step 7: parse_other_fields tests
+  # ============================================================================
+  - name: "Unit: parse_other_fields - extracts all fields"
+    inputs:
+      - insert_at: parse_other_fields
+        type: log
+        log_fields:
+          message: 'MaskListNo=123 rqstType:"QUERY" IsQueryPhase:"N" srvObjCategory:"MASK" srvMethod:"GET_MASK_INFO" purge_tool:"PURGE_V1"'
+    outputs:
+      - extract_from: parse_other_fields
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.MaskListNo, "123")
+              assert_eq!(.rqstType, "QUERY")
+              assert_eq!(.IsQueryPhase, "N")
+              assert_eq!(.srvObjCategory, "MASK")
+              assert_eq!(.srvMethod, "GET_MASK_INFO")
+              assert_eq!(.Purge_Tool, "PURGE_V1")
+
+  - name: "Unit: parse_other_fields - partial fields"
+    inputs:
+      - insert_at: parse_other_fields
+        type: log
+        log_fields:
+          message: 'MaskListNo=456 IsQueryPhase:"Y"'
+    outputs:
+      - extract_from: parse_other_fields
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.MaskListNo, "456")
+              assert_eq!(.IsQueryPhase, "Y")
+              assert!(!exists(.rqstType))
+              assert!(!exists(.srvObjCategory))
+
+  - name: "Unit: parse_other_fields - no fields"
+    inputs:
+      - insert_at: parse_other_fields
+        type: log
+        log_fields:
+          message: 'no special fields here'
+    outputs:
+      - extract_from: parse_other_fields
+        conditions:
+          - type: vrl
+            source: |
+              assert!(!exists(.MaskListNo))
+              assert!(!exists(.rqstType))
+              assert!(!exists(.IsQueryPhase))
+
+  # ============================================================================
+  # Step 8: derive_and_cleanup tests
+  # ============================================================================
+  - name: "Unit: derive_and_cleanup - derives maskGroupId from product and layer"
+    inputs:
+      - insert_at: derive_and_cleanup
+        type: log
+        log_fields:
+          product: "TMEF78"
+          layer: "376A-M001"
+    outputs:
+      - extract_from: derive_and_cleanup
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.MGtag, "null")
+              assert_eq!(.maskGroupId, "TMEF78-376A-M001")
+              assert!(!exists(.Ptag))
+              assert!(!exists(.Ltag))
+
+  - name: "Unit: derive_and_cleanup - MaskListNo to int"
+    inputs:
+      - insert_at: derive_and_cleanup
+        type: log
+        log_fields:
+          MaskListNo: "123"
+    outputs:
+      - extract_from: derive_and_cleanup
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.MaskListNo, 123)
+              assert!(is_integer(.MaskListNo))
+
+  - name: "Unit: derive_and_cleanup - query phase IsQueryPhase Y"
+    inputs:
+      - insert_at: derive_and_cleanup
+        type: log
+        log_fields:
+          maskGroupId: "MG001"
+          maskLotId: "ML001"
+          product: "PROD"
+          layer: "LAYER"
+          IsQueryPhase: "Y"
+    outputs:
+      - extract_from: derive_and_cleanup
+        conditions:
+          - type: vrl
+            source: |
+              assert!(!exists(.maskLotId))
+              assert!(!exists(.maskGroupId))
+              assert!(!exists(.product))
+              assert!(!exists(.layer))
+
+  - name: "Unit: derive_and_cleanup - query phase rqstType PHASE"
+    inputs:
+      - insert_at: derive_and_cleanup
+        type: log
+        log_fields:
+          maskGroupId: "MG001"
+          maskLotId: "ML001"
+          product: "PROD"
+          layer: "LAYER"
+          rqstType: "QUERY_PHASE"
+    outputs:
+      - extract_from: derive_and_cleanup
+        conditions:
+          - type: vrl
+            source: |
+              assert!(!exists(.maskLotId))
+              assert!(!exists(.maskGroupId))
+              assert!(!exists(.product))
+              assert!(!exists(.layer))
+
+  - name: "Unit: derive_and_cleanup - no query phase preserves fields"
+    inputs:
+      - insert_at: derive_and_cleanup
+        type: log
+        log_fields:
+          maskGroupId: "MG001"
+          maskLotId: "ML001"
+          product: "PROD"
+          layer: "LAYER"
+          IsQueryPhase: "N"
+    outputs:
+      - extract_from: derive_and_cleanup
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.maskLotId, "ML001")
+              assert_eq!(.maskGroupId, "MG001")
+              assert_eq!(.product, "PROD")
+              assert_eq!(.layer, "LAYER")
+
+  - name: "Unit: derive_and_cleanup - sets all null tags when fields missing"
+    inputs:
+      - insert_at: derive_and_cleanup
+        type: log
+        log_fields:
+          message: "no special fields"
+    outputs:
+      - extract_from: derive_and_cleanup
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.MGtag, "null")
+              assert_eq!(.Ptag, "null")
+              assert_eq!(.Ltag, "null")
+
+  # ============================================================================
+  # Integration tests (full pipeline)
+  # ============================================================================
+  - name: "Integration: full pipeline - all fields extracted"
+    inputs:
+      - insert_at: enrich_static
         type: log
         log_fields:
           message: 'Rep_DisplayInfo mask_group_id:"TMEF78-376A-M001" product:"TMEF78" layer:"376A-M001" Action:"CREATE:MG001" mask_lot_id:"EBGN29J.1" rqstType:"QUERY" IsQueryPhase:"N" srvObjCategory:"MASK" srvMethod:"GET_MASK_INFO" purge_tool:"PURGE_V1" MaskListNo=123'
           path: "/app/log/web_hmib_1.log"
     outputs:
-      - extract_from: parse_fields
+      - extract_from: derive_and_cleanup
         conditions:
           - type: vrl
             source: |
-              assert_eq!(.system, "ledgendary")
+              assert_eq!(.system, "legendary")
               assert_eq!(.type, "ap_log")
               assert_eq!(.filename, "web_hmib_1.log")
               assert_eq!(.product, "TMEF78")
@@ -266,39 +831,10 @@ tests:
               assert_eq!(.srvObjCategory, "MASK")
               assert_eq!(.srvMethod, "GET_MASK_INFO")
               assert_eq!(.Purge_Tool, "PURGE_V1")
-  - name: "Unit: derive maskGroupId"
+
+  - name: "Integration: multiline sample end-to-end"
     inputs:
-      - insert_at: parse_fields
-        type: log
-        log_fields:
-          message: 'product:"TMEF78" layer:"376A-M001"'
-    outputs:
-      - extract_from: parse_fields
-        conditions:
-          - type: vrl
-            source: |
-              assert_eq!(.MGtag, "null")
-              assert_eq!(.maskGroupId, "TMEF78-376A-M001")
-              assert!(!exists(.Ptag))
-              assert!(!exists(.Ltag))
-  - name: "Unit: query phase field removal"
-    inputs:
-      - insert_at: parse_fields
-        type: log
-        log_fields:
-          message: 'mask_group_id:"TMEF78-376A-M001" product:"TMEF78" layer:"376A-M001" mask_lot_id:"EBGN29J.1" IsQueryPhase:"Y"'
-    outputs:
-      - extract_from: parse_fields
-        conditions:
-          - type: vrl
-            source: |
-              assert!(!exists(.maskLotId))
-              assert!(!exists(.maskGroupId))
-              assert!(!exists(.product))
-              assert!(!exists(.layer))
-  - name: "Integration: multiline sample"
-    inputs:
-      - insert_at: parse_fields
+      - insert_at: enrich_static
         type: log
         log_fields:
           message: |
@@ -311,10 +847,12 @@ tests:
             [2026-01-16 09:10:33:211]   [8e475fe2-0680-41f2-b734-20cd691d05f9] Rep_DisplayInfo mask_group_id:"TMEF78-376A-M001" product:"TMEF78" layer:"376A-M001"
           path: "/app/log/web_hmib_1.log"
     outputs:
-      - extract_from: parse_fields
+      - extract_from: derive_and_cleanup
         conditions:
           - type: vrl
             source: |
+              assert_eq!(.system, "legendary")
+              assert_eq!(.type, "ap_log")
               assert_eq!(.filename, "web_hmib_1.log")
               assert_eq!(.maskLotId, "EBGN29J.1")
               assert_eq!(.maskGroupId, "TMEF78-376A-M001")

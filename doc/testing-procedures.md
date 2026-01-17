@@ -97,7 +97,7 @@ Check that the output contains the expected fields and values:
 ```json
 {
   "filename": "web_hmib_1.log",
-  "system": "ledgendary",
+  "system": "legendary",
   "type": "ap_log",
   "product": "TMEF78",
   "layer": "376A-M001",
@@ -115,7 +115,7 @@ Check that the output contains the expected fields and values:
 ```json
 {
   "filename": "web_hmib_1.log",
-  "system": "ledgendary",
+  "system": "legendary",
   "type": "ap_log",
   "message": "[2026-01-16 09:10:33:130]   [8e475fe2-0680-41f2-b734-20cd691d05f9] [TRACE] before SysUuid::set(): curSysUuid=8e475fe2-0680-41f2-b734-20cd691d05f9, preSysUuid=a027d5c0-8560-49e7-8f82-70901077a4bf",
   "path": "sample/web_hmib_1.log",
@@ -134,7 +134,7 @@ Check that the output contains the expected fields and values:
 - [ ] Second event contains only basic fields (no extracted data expected)
 - [ ] Multiline aggregation works correctly (first event spans lines 1-7)
 - [ ] Filename extraction works (`web_hmib_1.log`)
-- [ ] System field is set to `ledgendary`
+- [ ] System field is set to `legendary`
 
 ### Performance Validation
 - [ ] Vector starts without errors
