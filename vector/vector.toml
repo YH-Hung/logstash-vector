@@ -31,18 +31,18 @@ type = "remap"
 inputs = ["parse_filename"]
 source = '''
 # Primary fields - single pattern
-result, err = parse_grok(string!(.message), ".*(?i)product:\\\"%{NOTSPACE:product}\\\"")
+result, err = parse_grok(string!(.message), ".*(?i)\\\"product\\\":\\\"%{NOTSPACE:product}\\\"")
 if err == null && is_object(result) {
     .product = result.product
 }
 
-result, err = parse_grok(string!(.message), ".*(?i)layer:\\\"%{NOTSPACE:layer}\\\"")
+result, err = parse_grok(string!(.message), ".*(?i)\\\"layer\\\":\\\"%{NOTSPACE:layer}\\\"")
 if err == null && is_object(result) {
     .layer = result.layer
 }
 
 # maskGroupId - 5 fallback patterns
-result, err = parse_grok(string!(.message), ".*(?i)mask_?group_?id:\\\"%{NOTSPACE:maskGroupId}\\\"")
+result, err = parse_grok(string!(.message), ".*(?i)\\\"mask_?group_?id\\\":\\\"%{NOTSPACE:maskGroupId}\\\"")
 if err != null || !is_object(result) {
     result, err = parse_grok(string!(.message), ".*(?i)maskGroupId->\\s%{NOTSPACE:maskGroupId}")
 }
@@ -124,19 +124,9 @@ if err == null && is_object(result) {
 type = "remap"
 inputs = ["field_parser"]
 source = '''
-# Tag management - set tags to "null" if fields are missing
-if !exists(.maskGroupId) {
-    .MGtag = "null"
-}
-if !exists(.product) {
-    .Ptag = "null"
-}
-if !exists(.layer) {
-    .Ltag = "null"
-}
-
 # Field combination - combine product and layer into maskGroupId if needed
-if .MGtag == "null" && .Ptag != "null" && .Ltag != "null" {
+# Only combine when maskGroupId does NOT exist AND product and layer both exist
+if !exists(.maskGroupId) && exists(.product) && exists(.layer) {
     .maskGroupId = string!(.product) + "-" + string!(.layer)
 }
 
