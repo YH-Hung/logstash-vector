@@ -1,4 +1,4 @@
-data_dir: /Users/yinghanhung/Projects/AI/logstash-vector/tmp/vector
+data_dir: tmp/vector
 
 sources:
   ap_log_files:
@@ -10,7 +10,7 @@ sources:
     multiline:
       start_pattern: '^\[.*\]\s\s\s\[.*\]\s\[TRACE\]\sbefore\sSysUuid::set\(\):\scurSysUuid=.*'
       condition_pattern: '^\[.*\]\s\s\s\[.*\]\s\[TRACE\]\sbefore\sSysUuid::set\(\):\scurSysUuid=.*'
-      mode: continue_through
+      mode: halt_before
       timeout_ms: 1000
 
 transforms:
@@ -19,31 +19,30 @@ transforms:
     inputs:
       - ap_log_files
     source: |
-      .system = "legendary"
+      .system = "ledgendary"
       .type = "ap_log"
 
-      if !is_null(.path) {
-        path_value = to_string!(.path)
-        filename_parsed = parse_grok!(path_value, "%{GREEDYDATA}/%{NOTSPACE:filename}")
+      if !is_null(.path) && is_string(.path) {
+        filename_parsed = parse_grok!(.path, "%{GREEDYDATA}/%{NOTSPACE:filename}")
         if filename_parsed != null && filename_parsed.filename != null {
           .filename = filename_parsed.filename
         }
       }
 
-      if !is_null(.message) {
-        message_value = to_string!(.message)
-        parsed = parse_grok!(message_value, ".*(?i)product:\"%{NOTSPACE:product}\"")
+      if !is_null(.message) && is_string(.message) {
+        message_value = .message
+        parsed = parse_grok!(message_value, ".*(?i)product\\\":\\\"%{NOTSPACE:product}\\\"")
         if parsed != null && parsed.product != null {
           .product = parsed.product
         }
 
-        parsed = parse_grok!(message_value, ".*(?i)layer:\"%{NOTSPACE:layer}\"")
+        parsed = parse_grok!(message_value, ".*(?i)layer\\\":\\\"%{NOTSPACE:layer}\\\"")
         if parsed != null && parsed.layer != null {
           .layer = parsed.layer
         }
 
         if is_null(.maskGroupId) {
-          parsed = parse_grok!(message_value, ".*(?i)mask_?group_?id:\"%{NOTSPACE:maskGroupId}\"")
+          parsed = parse_grok!(message_value, ".*(?i)mask_?group_?id\\\":\\\"%{NOTSPACE:maskGroupId}\\\"")
           if parsed != null && parsed.maskGroupId != null {
             .maskGroupId = parsed.maskGroupId
           }
@@ -57,14 +56,14 @@ transforms:
         }
 
         if is_null(.maskGroupId) {
-          parsed = parse_grok!(message_value, ".*(?i)reticleId=\"%{NOTSPACE:maskGroupId}\">")
+          parsed = parse_grok!(message_value, ".*(?i)reticleId=\\\"%{NOTSPACE:maskGroupId}\\\">")
           if parsed != null && parsed.maskGroupId != null {
             .maskGroupId = parsed.maskGroupId
           }
         }
 
         if is_null(.maskGroupId) {
-          parsed = parse_grok!(message_value, ".*(?i)reticle_?id:\"%{NOTSPACE:maskGroupId}\"")
+          parsed = parse_grok!(message_value, ".*(?i)reticle_?id\\\":\\\"%{NOTSPACE:maskGroupId}\\\"")
           if parsed != null && parsed.maskGroupId != null {
             .maskGroupId = parsed.maskGroupId
           }
@@ -78,7 +77,7 @@ transforms:
         }
 
         if is_null(.Action) {
-          parsed = parse_grok!(message_value, ".*(?i)Action:\"%{NOTSPACE:Action}:%{NOTSPACE:maskGroupId}\"")
+          parsed = parse_grok!(message_value, ".*(?i)Action\\\":\\\"%{NOTSPACE:Action}:%{NOTSPACE:maskGroupId}\\\"")
           if parsed != null && parsed.Action != null {
             .Action = parsed.Action
             if is_null(.maskGroupId) && parsed.maskGroupId != null {
@@ -88,14 +87,14 @@ transforms:
         }
 
         if is_null(.Action) {
-          parsed = parse_grok!(message_value, ".*(?i)Action:\"%{NOTSPACE:Action}\"")
+          parsed = parse_grok!(message_value, ".*(?i)Action\\\":\\\"%{NOTSPACE:Action}\\\"")
           if parsed != null && parsed.Action != null {
             .Action = parsed.Action
           }
         }
 
         if is_null(.maskLotId) {
-          parsed = parse_grok!(message_value, ".*(?i)mask_?lot_?id:\"%{NOTSPACE:maskLotId}\"")
+          parsed = parse_grok!(message_value, ".*(?i)mask_?lot_?id\\\":\\\"%{NOTSPACE:maskLotId}\\\"")
           if parsed != null && parsed.maskLotId != null {
             .maskLotId = parsed.maskLotId
           }
@@ -130,35 +129,35 @@ transforms:
         }
 
         if is_null(.rqstType) {
-          parsed = parse_grok!(message_value, "rqstType:\"%{NOTSPACE:rqstType}\"")
+          parsed = parse_grok!(message_value, "rqstType\\\":\\\"%{NOTSPACE:rqstType}\\\"")
           if parsed != null && parsed.rqstType != null {
             .rqstType = parsed.rqstType
           }
         }
 
         if is_null(.IsQueryPhase) {
-          parsed = parse_grok!(message_value, "IsQueryPhase:\"%{NOTSPACE:IsQueryPhase}\"")
+          parsed = parse_grok!(message_value, "IsQueryPhase\\\":\\\"%{NOTSPACE:IsQueryPhase}\\\"")
           if parsed != null && parsed.IsQueryPhase != null {
             .IsQueryPhase = parsed.IsQueryPhase
           }
         }
 
         if is_null(.srvObjCategory) {
-          parsed = parse_grok!(message_value, "srvObjCategory:\"%{NOTSPACE:srvObjCategory}\"")
+          parsed = parse_grok!(message_value, "srvObjCategory\\\":\\\"%{NOTSPACE:srvObjCategory}\\\"")
           if parsed != null && parsed.srvObjCategory != null {
             .srvObjCategory = parsed.srvObjCategory
           }
         }
 
         if is_null(.srvMethod) {
-          parsed = parse_grok!(message_value, "srvMethod:\"%{NOTSPACE:srvMethod}\"")
+          parsed = parse_grok!(message_value, "srvMethod\\\":\\\"%{NOTSPACE:srvMethod}\\\"")
           if parsed != null && parsed.srvMethod != null {
             .srvMethod = parsed.srvMethod
           }
         }
 
         if is_null(.Purge_Tool) {
-          parsed = parse_grok!(message_value, "purge_tool:\"%{NOTSPACE:Purge_Tool}\"")
+          parsed = parse_grok!(message_value, "purge_tool\\\":\\\"%{NOTSPACE:Purge_Tool}\\\"")
           if parsed != null && parsed.Purge_Tool != null {
             .Purge_Tool = parsed.Purge_Tool
           }
@@ -178,9 +177,11 @@ transforms:
       }
 
       if .MGtag == "null" && .Ptag != "null" && .Ltag != "null" {
-        product_value = to_string!(.product)
-        layer_value = to_string!(.layer)
-        .maskGroupId = product_value + "-" + layer_value
+        product_str, err = to_string(.product)
+        layer_str, err = to_string(.layer)
+        if product_str != null && layer_str != null {
+          .maskGroupId = product_str + "-" + layer_str
+        }
       }
 
       if !is_null(.MaskListNo) {
@@ -189,15 +190,15 @@ transforms:
 
       query_phase = false
       if !is_null(.IsQueryPhase) {
-        is_query_phase = to_string!(.IsQueryPhase)
-        if contains(is_query_phase, "Y") {
+        is_query_phase_str, err = to_string(.IsQueryPhase)
+        if is_query_phase_str != null && contains(is_query_phase_str, "Y") {
           query_phase = true
         }
       }
 
       if !query_phase && !is_null(.rqstType) {
-        rqst_type = to_string!(.rqstType)
-        if contains(rqst_type, "PHASE") {
+        rqst_type_str, err = to_string(.rqstType)
+        if rqst_type_str != null && contains(rqst_type_str, "PHASE") {
           query_phase = true
         }
       }
@@ -223,14 +224,16 @@ sinks:
     tls:
       verify_certificate: true
     bulk:
-      index: "{{ POD_NAMESPACE }}"
+      index: "{{ POD_NAMESPACE }}-%Y.%m.%d"
     batch:
       timeout_secs: 5
       max_bytes: 8000000
     buffer:
       type: memory
       when_full: block
+      max_events: 1000
     request:
       timeout_secs: 10
+      retry_max_duration_secs: 3600
     healthcheck:
       enabled: false
