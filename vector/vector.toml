@@ -1,0 +1,167 @@
+[sources.file_input]
+type = "file"
+include = ["/app/log/web_*.log"]
+read_from = "end"
+
+[sources.file_input.multiline]
+start_pattern = '^\[%{DATA}\]\s\s\s\[%{DATA}\]\s\[TRACE\]\sbefore\sSysUuid::set\(\):\scurSysUuid=%{GREEDYDATA}'
+mode = "halt_before"
+condition_pattern = '^\[%{DATA}\]\s\s\s\[%{DATA}\]\s\[TRACE\]\sbefore\sSysUuid::set\(\):\scurSysUuid=%{GREEDYDATA}'
+timeout_ms = 5000
+
+[transforms.add_system_field]
+type = "remap"
+inputs = ["file_input"]
+source = '''
+.system = "legendary"
+'''
+
+[transforms.parse_filename]
+type = "remap"
+inputs = ["add_system_field"]
+source = '''
+result = parse_grok(.file, "%{GREEDYDATA}/%{NOTSPACE:filename}")
+if is_object(result) {
+    .filename = result.filename
+}
+'''
+
+[transforms.field_parser]
+type = "remap"
+inputs = ["parse_filename"]
+source = '''
+# Primary fields - single pattern
+result = parse_grok(.message, ".*(?i)product:\\\"%{NOTSPACE:product}\\\"")
+if is_object(result) {
+    .product = result.product
+}
+
+result = parse_grok(.message, ".*(?i)layer:\\\"%{NOTSPACE:layer}\\\"")
+if is_object(result) {
+    .layer = result.layer
+}
+
+# maskGroupId - 5 fallback patterns
+result = parse_grok(.message, ".*(?i)mask_?group_?id:\\\"%{NOTSPACE:maskGroupId}\\\"")
+if !is_object(result) {
+    result = parse_grok(.message, ".*(?i)maskGroupId->\\s%{NOTSPACE:maskGroupId}")
+}
+if !is_object(result) {
+    result = parse_grok(.message, ".*(?i)reticleId=\\\"%{NOTSPACE:maskGroupId}\\\"\\>")
+}
+if !is_object(result) {
+    result = parse_grok(.message, ".*(?i)reticle_?id:\\\"%{NOTSPACE:maskGroupId}\\\"")
+}
+if !is_object(result) {
+    result = parse_grok(.message, ".*(?i)reticlelotid\\s->\\s%{NOTSPACE:maskGroupId}")
+}
+if is_object(result) {
+    .maskGroupId = result.maskGroupId
+}
+
+# Action - 2 patterns
+result = parse_grok(.message, ".*(?i)Action:\\\"%{NOTSPACE:Action}\\:%{NOTSPACE:maskGroupId}\\\"")
+if is_object(result) {
+    .Action = result.Action
+    if !exists(.maskGroupId) {
+        .maskGroupId = result.maskGroupId
+    }
+} else {
+    result = parse_grok(.message, ".*(?i)Action:\\\"%{NOTSPACE:Action}\\\"")
+    if is_object(result) {
+        .Action = result.Action
+    }
+}
+
+# maskLotId - 4 patterns
+result = parse_grok(.message, ".*(?i)mask_?lot_?id:\\\"%{NOTSPACE:maskLotId}\\\"")
+if !is_object(result) {
+    result = parse_grok(.message, ".*(?i)maskLotId->%{NOTSPACE:maskLotId}")
+}
+if !is_object(result) {
+    result = parse_grok(.message, ".*(?i)maskLotId->\\s%{NOTSPACE:maskLotId}")
+}
+if !is_object(result) {
+    result = parse_grok(.message, ".*(?i)maskLotId\\s=\\s\\'%{NOTSPACE:maskLotId}\\'")
+}
+if is_object(result) {
+    .maskLotId = result.maskLotId
+}
+
+# Simple fields
+result = parse_grok(.message, "MaskListNo=%{NUMBER:MaskListNo}")
+if is_object(result) {
+    .MaskListNo = result.MaskListNo
+}
+
+result = parse_grok(.message, "rqstType:\\\"%{NOTSPACE:rqstType}\\\"")
+if is_object(result) {
+    .rqstType = result.rqstType
+}
+
+result = parse_grok(.message, "IsQueryPhase:\\\"%{NOTSPACE:IsQueryPhase}\\\"")
+if is_object(result) {
+    .IsQueryPhase = result.IsQueryPhase
+}
+
+result = parse_grok(.message, "srvObjCategory:\\\"%{NOTSPACE:srvObjCategory}\\\"")
+if is_object(result) {
+    .srvObjCategory = result.srvObjCategory
+}
+
+result = parse_grok(.message, "srvMethod:\\\"%{NOTSPACE:srvMethod}\\\"")
+if is_object(result) {
+    .srvMethod = result.srvMethod
+}
+
+result = parse_grok(.message, "purge_tool:\\\"%{NOTSPACE:Purge_Tool}\\\"")
+if is_object(result) {
+    .Purge_Tool = result.Purge_Tool
+}
+'''
+
+[transforms.processing_logic]
+type = "remap"
+inputs = ["field_parser"]
+source = '''
+# Tag management - set tags to "null" if fields are missing
+if !exists(.maskGroupId) {
+    .MGtag = "null"
+}
+if !exists(.product) {
+    .Ptag = "null"
+}
+if !exists(.layer) {
+    .Ltag = "null"
+}
+
+# Field combination - combine product and layer into maskGroupId if needed
+if .MGtag == "null" && .Ptag != "null" && .Ltag != "null" {
+    .maskGroupId = string!(.product) + "-" + string!(.layer)
+}
+
+# Type conversion - convert MaskListNo to integer
+if exists(.MaskListNo) {
+    .MaskListNo = to_int!(.MaskListNo)
+}
+
+# Conditional field removal - remove fields if IsQueryPhase == "Y" or rqstType contains "PHASE"
+if (exists(.IsQueryPhase) && .IsQueryPhase == "Y") || (exists(.rqstType) && includes(string!(.rqstType), "PHASE")) {
+    del(.maskLotId)
+    del(.maskGroupId)
+    del(.product)
+    del(.layer)
+}
+'''
+
+[sinks.elasticsearch_output]
+type = "elasticsearch"
+inputs = ["processing_logic"]
+endpoints = ["http://elasticsearch-fz1.engmon.svc.cluster.local:9200"]
+bulk.index = "{{ POD_NAMESPACE }}"
+auth.strategy = "basic"
+auth.user = "use_default"
+auth.password = "use_default"
+tls.verify_certificate = true
+tls.verify_hostname = true
+

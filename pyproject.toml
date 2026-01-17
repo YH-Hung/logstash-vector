@@ -1,0 +1,16 @@
+[project]
+name = "logstash-vector-migration"
+version = "0.1.0"
+description = "Logstash to Vector migration with TDD tests"
+requires-python = ">=3.8"
+dependencies = [
+    "pytest>=7.0.0",
+    "pyyaml>=6.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
