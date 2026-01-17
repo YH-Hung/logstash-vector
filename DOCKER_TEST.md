@@ -81,6 +81,7 @@ The comparison script (`scripts/compare_outputs.py`):
    - `@timestamp`, `@version`, `host`, `log`, `ecs`, `agent`
    - `file`, `path`, `message` (raw log content)
    - `tags`, `type`, `source`
+   - `MGtag`, `Ltag`, `Ptag` - Logstash uses these tags to track missing fields, but Vector directly checks field existence using `exists()` function. This is an implementation difference and these fields are excluded from comparison.
    - Any field starting with `@`
 
 2. **Compares parsed fields**:

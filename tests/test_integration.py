@@ -53,7 +53,11 @@ def test_complete_pipeline_structure(vector_config_path):
     assert "[sources.file_input]" in config_content, "File source not found"
     assert "[transforms.add_system_field]" in config_content, "System field transform not found"
     assert "[transforms.parse_filename]" in config_content, "Filename parsing transform not found"
-    assert "[transforms.field_parser]" in config_content, "Field parser transform not found"
+    assert "[transforms.extract_primary_fields]" in config_content, "Extract primary fields transform not found"
+    assert "[transforms.extract_maskgroupid]" in config_content, "Extract maskgroupid transform not found"
+    assert "[transforms.extract_action]" in config_content, "Extract action transform not found"
+    assert "[transforms.extract_masklotid]" in config_content, "Extract masklotid transform not found"
+    assert "[transforms.extract_simple_fields]" in config_content, "Extract simple fields transform not found"
     assert "[transforms.processing_logic]" in config_content, "Processing logic transform not found"
     assert "[sinks.elasticsearch_output]" in config_content, "Elasticsearch sink not found"
 
@@ -66,10 +70,14 @@ def test_pipeline_data_flow(vector_config_path):
     config_content = vector_config_path.read_text()
     
     # Verify transform chain
-    # file_input -> add_system_field -> parse_filename -> field_parser -> processing_logic -> elasticsearch_output
+    # file_input -> add_system_field -> parse_filename -> extract_primary_fields -> extract_maskgroupid -> extract_action -> extract_masklotid -> extract_simple_fields -> processing_logic -> elasticsearch_output
     assert 'inputs = ["file_input"]' in config_content or 'inputs = ["add_system_field"]' in config_content
-    assert 'inputs = ["parse_filename"]' in config_content or 'inputs = ["field_parser"]' in config_content
-    assert 'inputs = ["processing_logic"]' in config_content or 'inputs = ["field_parser"]' in config_content
+    assert 'inputs = ["parse_filename"]' in config_content or 'inputs = ["extract_primary_fields"]' in config_content
+    assert 'inputs = ["extract_primary_fields"]' in config_content or 'inputs = ["extract_maskgroupid"]' in config_content
+    assert 'inputs = ["extract_maskgroupid"]' in config_content or 'inputs = ["extract_action"]' in config_content
+    assert 'inputs = ["extract_action"]' in config_content or 'inputs = ["extract_masklotid"]' in config_content
+    assert 'inputs = ["extract_masklotid"]' in config_content or 'inputs = ["extract_simple_fields"]' in config_content
+    assert 'inputs = ["extract_simple_fields"]' in config_content or 'inputs = ["processing_logic"]' in config_content
 
 
 def test_error_handling_malformed_logs(temp_config_file, temp_log_file):
@@ -85,20 +93,20 @@ type = "file"
 include = ["{temp_log_file}"]
 read_from = "beginning"
 
-[transforms.field_parser]
+[transforms.extract_primary_fields]
 type = "remap"
 inputs = ["file_input"]
 source = '''
 # Try to parse, but don't fail on errors
-result = parse_grok(.message, ".*(?i)product:\\\"%{{NOTSPACE:product}}\\\"")
-if is_object(result) {{
+result, err = parse_grok(string!(.message), ".*(?i)product:\\\"%{{NOTSPACE:product}}\\\"")
+if err == null && is_object(result) {{
     .product = result.product
 }}
 '''
 
 [sinks.console]
 type = "console"
-inputs = ["field_parser"]
+inputs = ["extract_primary_fields"]
 encoding.codec = "json"
 """
     
@@ -138,8 +146,12 @@ def test_all_fields_extracted(vector_config_path):
         "filename"
     ]
     
-    # Verify field parser includes extraction logic
-    assert "field_parser" in config_content, "Field parser transform should exist"
+    # Verify field extraction transforms exist
+    assert "extract_primary_fields" in config_content, "Extract primary fields transform should exist"
+    assert "extract_maskgroupid" in config_content, "Extract maskgroupid transform should exist"
+    assert "extract_action" in config_content, "Extract action transform should exist"
+    assert "extract_masklotid" in config_content, "Extract masklotid transform should exist"
+    assert "extract_simple_fields" in config_content, "Extract simple fields transform should exist"
     
     # Check that at least some field patterns are present
     assert "parse_grok" in config_content, "Grok parsing should be used"

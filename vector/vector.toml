@@ -26,7 +26,7 @@ if err == null && is_object(result) {
 }
 '''
 
-[transforms.field_parser]
+[transforms.extract_primary_fields]
 type = "remap"
 inputs = ["parse_filename"]
 source = '''
@@ -40,7 +40,12 @@ result, err = parse_grok(string!(.message), ".*(?i)\\\"layer\\\":\\\"%{NOTSPACE:
 if err == null && is_object(result) {
     .layer = result.layer
 }
+'''
 
+[transforms.extract_maskgroupid]
+type = "remap"
+inputs = ["extract_primary_fields"]
+source = '''
 # maskGroupId - 5 fallback patterns
 result, err = parse_grok(string!(.message), ".*(?i)\\\"mask_?group_?id\\\":\\\"%{NOTSPACE:maskGroupId}\\\"")
 if err != null || !is_object(result) {
@@ -58,7 +63,12 @@ if err != null || !is_object(result) {
 if err == null && is_object(result) {
     .maskGroupId = result.maskGroupId
 }
+'''
 
+[transforms.extract_action]
+type = "remap"
+inputs = ["extract_maskgroupid"]
+source = '''
 # Action - 2 patterns
 result, err = parse_grok(string!(.message), ".*(?i)Action:\\\"%{NOTSPACE:Action}\\:%{NOTSPACE:maskGroupId}\\\"")
 if err == null && is_object(result) {
@@ -72,7 +82,12 @@ if err == null && is_object(result) {
         .Action = result.Action
     }
 }
+'''
 
+[transforms.extract_masklotid]
+type = "remap"
+inputs = ["extract_action"]
+source = '''
 # maskLotId - 4 patterns
 result, err = parse_grok(string!(.message), ".*(?i)mask_?lot_?id:\\\"%{NOTSPACE:maskLotId}\\\"")
 if err != null || !is_object(result) {
@@ -87,7 +102,12 @@ if err != null || !is_object(result) {
 if err == null && is_object(result) {
     .maskLotId = result.maskLotId
 }
+'''
 
+[transforms.extract_simple_fields]
+type = "remap"
+inputs = ["extract_masklotid"]
+source = '''
 # Simple fields
 result, err = parse_grok(string!(.message), "MaskListNo=%{NUMBER:MaskListNo}")
 if err == null && is_object(result) {
@@ -122,10 +142,11 @@ if err == null && is_object(result) {
 
 [transforms.processing_logic]
 type = "remap"
-inputs = ["field_parser"]
+inputs = ["extract_simple_fields"]
 source = '''
 # Field combination - combine product and layer into maskGroupId if needed
 # Only combine when maskGroupId does NOT exist AND product and layer both exist
+# NOTE: Vector directly checks field existence, unlike Logstash which uses MGtag/Ltag/Ptag tags
 if !exists(.maskGroupId) && exists(.product) && exists(.layer) {
     .maskGroupId = string!(.product) + "-" + string!(.layer)
 }

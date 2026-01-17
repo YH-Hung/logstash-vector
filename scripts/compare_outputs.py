@@ -22,6 +22,10 @@ def normalize_event(event: Dict[str, Any]) -> Dict[str, Any]:
         'timestamp',  # Vector adds timestamp, Logstash uses @timestamp
         'event',  # Logstash adds event.original, Vector doesn't
         'filename',  # Vector extracts this, Logstash may not (or extracts differently)
+        # Tag fields: Logstash uses MGtag/Ltag/Ptag to track missing fields,
+        # but Vector directly checks field existence (exists() function).
+        # These are implementation differences and should be excluded from comparison.
+        'MGtag', 'Ltag', 'Ptag',
     }
     
     # Create normalized copy
