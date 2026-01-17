@@ -73,3 +73,7 @@ test-configs/*.toml
 # Temporary files
 *.tmp
 .temp/
+
+# Docker test outputs
+output/
+*.jsonl

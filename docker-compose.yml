@@ -1,0 +1,47 @@
+services:
+  vector:
+    image: timberio/vector:latest-alpine
+    container_name: vector_test
+    volumes:
+      - ./sample:/app/log:ro
+      - ./vector:/etc/vector:ro
+      - ./output:/output
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "
+        vector validate --config-toml /etc/vector/vector.test.toml --no-environment &&
+        vector --config-toml /etc/vector/vector.test.toml &
+        VECTOR_PID=$$! &&
+        sleep 20 &&
+        kill -TERM $$VECTOR_PID 2>/dev/null || true &&
+        sleep 2 &&
+        kill -KILL $$VECTOR_PID 2>/dev/null || true
+      "
+    networks:
+      - test_network
+    restart: "no"
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: logstash_test
+    volumes:
+      - ./sample:/app/log:ro
+      - ./sample:/etc/logstash/conf.d:ro
+      - ./output:/output
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "
+        logstash -f /etc/logstash/conf.d/logstash.test.conf --log.level=warn &
+        LOGSTASH_PID=$$! &&
+        sleep 20 &&
+        kill -TERM $$LOGSTASH_PID 2>/dev/null || true &&
+        sleep 2 &&
+        kill -KILL $$LOGSTASH_PID 2>/dev/null || true
+      "
+    networks:
+      - test_network
+    restart: "no"
+
+networks:
+  test_network:
+    driver: bridge

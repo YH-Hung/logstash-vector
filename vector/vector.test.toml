@@ -1,7 +1,7 @@
 [sources.file_input]
 type = "file"
 include = ["/app/log/web_*.log"]
-read_from = "end"
+read_from = "beginning"
 
 [sources.file_input.multiline]
 start_pattern = '^\[[^\]]+\]\s{3}\[[^\]]+\]\s\[TRACE\]\sbefore\sSysUuid::set\(\):\scurSysUuid=[^\s]+'
@@ -158,14 +158,8 @@ if (exists(.IsQueryPhase) && .IsQueryPhase == "Y") || (rqst_type_str != "" && co
 }
 '''
 
-[sinks.elasticsearch_output]
-type = "elasticsearch"
+[sinks.file_output]
+type = "file"
 inputs = ["processing_logic"]
-endpoints = ["http://elasticsearch-fz1.engmon.svc.cluster.local:9200"]
-bulk.index = "{{ POD_NAMESPACE }}"
-auth.strategy = "basic"
-auth.user = "use_default"
-auth.password = "use_default"
-tls.verify_certificate = true
-tls.verify_hostname = true
-
+path = "/output/vector_output.jsonl"
+encoding.codec = "json"

@@ -21,6 +21,25 @@ def test_end_to_end_pipeline(sample_log_path, vector_config_path, project_root):
     )
     
     assert result.returncode == 0, f"Vector config validation failed: {result.stderr}"
+    
+    # Also check for common runtime error patterns in the config
+    config_content = vector_config_path.read_text()
+    
+    # Check that parse_grok uses proper error handling
+    if 'result = parse_grok(' in config_content and 'result, err = parse_grok(' not in config_content:
+        if 'parse_grok!(' not in config_content:  # Allow infallible version
+            pytest.fail("Config uses parse_grok without error handling - will cause runtime errors")
+    
+    # Check that includes() is not used with strings
+    if 'includes(string!' in config_content:
+        pytest.fail("Config uses includes() with string - should use contains() - will cause runtime errors")
+    
+    # Check multiline pattern doesn't use grok syntax
+    if '%{DATA}' in config_content:
+        lines = config_content.split('\n')
+        for i, line in enumerate(lines):
+            if 'start_pattern' in line and '%{DATA}' in line:
+                pytest.fail(f"Multiline pattern uses grok syntax instead of regex (line {i+1}) - will cause runtime errors")
 
 
 def test_complete_pipeline_structure(vector_config_path):
