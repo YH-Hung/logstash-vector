@@ -29,6 +29,11 @@ Migrate the Logstash pipeline that processes `ap_log` file inputs from `/app/log
 - `logstash_format: true` with `logstash_date_format: "%Y.%m.%d"` and `bulk.index: "{{ POD_NAMESPACE }}"`.
 - Buffering matches required flush interval and chunk size with retry forever behavior.
 
+## Testing
+
+- Unit tests live in `impl/vector.yaml` and cover parsing, tag derivation, query-phase removal, and multiline inputs.
+- Run `vector test impl/vector.yaml` to execute the unit test suite.
+
 ## Next Steps
 
 - Validate grok patterns with real log samples.

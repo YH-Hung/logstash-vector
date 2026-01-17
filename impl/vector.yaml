@@ -19,11 +19,11 @@ transforms:
     inputs:
       - ap_log_files
     source: |
-      .system = "ledgendary"
+      .system = "legendary"
       .type = "ap_log"
 
       if !is_null(.path) && is_string(.path) {
-        filename_parsed = parse_grok!(.path, "%{GREEDYDATA}/%{NOTSPACE:filename}")
+        filename_parsed, _ = parse_grok(.path, "%{GREEDYDATA}/%{NOTSPACE:filename}")
         if filename_parsed != null && filename_parsed.filename != null {
           .filename = filename_parsed.filename
         }
@@ -31,53 +31,53 @@ transforms:
 
       if !is_null(.message) && is_string(.message) {
         message_value = .message
-        parsed = parse_grok!(message_value, ".*(?i)product\\\":\\\"%{NOTSPACE:product}\\\"")
+        parsed, _ = parse_grok(message_value, ".*(?i)product:\"%{NOTSPACE:product}\"")
         if parsed != null && parsed.product != null {
           .product = parsed.product
         }
 
-        parsed = parse_grok!(message_value, ".*(?i)layer\\\":\\\"%{NOTSPACE:layer}\\\"")
+        parsed, _ = parse_grok(message_value, ".*(?i)layer:\"%{NOTSPACE:layer}\"")
         if parsed != null && parsed.layer != null {
           .layer = parsed.layer
         }
 
         if is_null(.maskGroupId) {
-          parsed = parse_grok!(message_value, ".*(?i)mask_?group_?id\\\":\\\"%{NOTSPACE:maskGroupId}\\\"")
+          parsed, _ = parse_grok(message_value, ".*(?i)mask_?group_?id:\"%{NOTSPACE:maskGroupId}\"")
           if parsed != null && parsed.maskGroupId != null {
             .maskGroupId = parsed.maskGroupId
           }
         }
 
         if is_null(.maskGroupId) {
-          parsed = parse_grok!(message_value, ".*(?i)maskGroupId-> %{NOTSPACE:maskGroupId}")
+          parsed, _ = parse_grok(message_value, ".*(?i)maskGroupId-> %{NOTSPACE:maskGroupId}")
           if parsed != null && parsed.maskGroupId != null {
             .maskGroupId = parsed.maskGroupId
           }
         }
 
         if is_null(.maskGroupId) {
-          parsed = parse_grok!(message_value, ".*(?i)reticleId=\\\"%{NOTSPACE:maskGroupId}\\\">")
+          parsed, _ = parse_grok(message_value, ".*(?i)reticleId=\\\"%{NOTSPACE:maskGroupId}\\\">")
           if parsed != null && parsed.maskGroupId != null {
             .maskGroupId = parsed.maskGroupId
           }
         }
 
         if is_null(.maskGroupId) {
-          parsed = parse_grok!(message_value, ".*(?i)reticle_?id\\\":\\\"%{NOTSPACE:maskGroupId}\\\"")
+          parsed, _ = parse_grok(message_value, ".*(?i)reticle_?id:\"%{NOTSPACE:maskGroupId}\"")
           if parsed != null && parsed.maskGroupId != null {
             .maskGroupId = parsed.maskGroupId
           }
         }
 
         if is_null(.maskGroupId) {
-          parsed = parse_grok!(message_value, ".*(?i)reticlelotid -> %{NOTSPACE:maskGroupId}")
+          parsed, _ = parse_grok(message_value, ".*(?i)reticlelotid -> %{NOTSPACE:maskGroupId}")
           if parsed != null && parsed.maskGroupId != null {
             .maskGroupId = parsed.maskGroupId
           }
         }
 
         if is_null(.Action) {
-          parsed = parse_grok!(message_value, ".*(?i)Action\\\":\\\"%{NOTSPACE:Action}:%{NOTSPACE:maskGroupId}\\\"")
+          parsed, _ = parse_grok(message_value, ".*(?i)Action:\"%{NOTSPACE:Action}:%{NOTSPACE:maskGroupId}\"")
           if parsed != null && parsed.Action != null {
             .Action = parsed.Action
             if is_null(.maskGroupId) && parsed.maskGroupId != null {
@@ -87,77 +87,77 @@ transforms:
         }
 
         if is_null(.Action) {
-          parsed = parse_grok!(message_value, ".*(?i)Action\\\":\\\"%{NOTSPACE:Action}\\\"")
+          parsed, _ = parse_grok(message_value, ".*(?i)Action:\"%{NOTSPACE:Action}\"")
           if parsed != null && parsed.Action != null {
             .Action = parsed.Action
           }
         }
 
         if is_null(.maskLotId) {
-          parsed = parse_grok!(message_value, ".*(?i)mask_?lot_?id\\\":\\\"%{NOTSPACE:maskLotId}\\\"")
+          parsed, _ = parse_grok(message_value, ".*(?i)mask_?lot_?id:\"%{NOTSPACE:maskLotId}\"")
           if parsed != null && parsed.maskLotId != null {
             .maskLotId = parsed.maskLotId
           }
         }
 
         if is_null(.maskLotId) {
-          parsed = parse_grok!(message_value, ".*(?i)maskLotId->%{NOTSPACE:maskLotId}")
+          parsed, _ = parse_grok(message_value, ".*(?i)maskLotId->%{NOTSPACE:maskLotId}")
           if parsed != null && parsed.maskLotId != null {
             .maskLotId = parsed.maskLotId
           }
         }
 
         if is_null(.maskLotId) {
-          parsed = parse_grok!(message_value, ".*(?i)maskLotId-> %{NOTSPACE:maskLotId}")
+          parsed, _ = parse_grok(message_value, ".*(?i)maskLotId-> %{NOTSPACE:maskLotId}")
           if parsed != null && parsed.maskLotId != null {
             .maskLotId = parsed.maskLotId
           }
         }
 
         if is_null(.maskLotId) {
-          parsed = parse_grok!(message_value, ".*(?i)maskLotId = '%{NOTSPACE:maskLotId}'")
+          parsed, _ = parse_grok(message_value, ".*(?i)maskLotId = '%{NOTSPACE:maskLotId}'")
           if parsed != null && parsed.maskLotId != null {
             .maskLotId = parsed.maskLotId
           }
         }
 
         if is_null(.MaskListNo) {
-          parsed = parse_grok!(message_value, "MaskListNo=%{NUMBER:MaskListNo}")
+          parsed, _ = parse_grok(message_value, "MaskListNo=%{NUMBER:MaskListNo}")
           if parsed != null && parsed.MaskListNo != null {
             .MaskListNo = parsed.MaskListNo
           }
         }
 
         if is_null(.rqstType) {
-          parsed = parse_grok!(message_value, "rqstType\\\":\\\"%{NOTSPACE:rqstType}\\\"")
+          parsed, _ = parse_grok(message_value, "rqstType:\"%{NOTSPACE:rqstType}\"")
           if parsed != null && parsed.rqstType != null {
             .rqstType = parsed.rqstType
           }
         }
 
         if is_null(.IsQueryPhase) {
-          parsed = parse_grok!(message_value, "IsQueryPhase\\\":\\\"%{NOTSPACE:IsQueryPhase}\\\"")
+          parsed, _ = parse_grok(message_value, "IsQueryPhase:\"%{NOTSPACE:IsQueryPhase}\"")
           if parsed != null && parsed.IsQueryPhase != null {
             .IsQueryPhase = parsed.IsQueryPhase
           }
         }
 
         if is_null(.srvObjCategory) {
-          parsed = parse_grok!(message_value, "srvObjCategory\\\":\\\"%{NOTSPACE:srvObjCategory}\\\"")
+          parsed, _ = parse_grok(message_value, "srvObjCategory:\"%{NOTSPACE:srvObjCategory}\"")
           if parsed != null && parsed.srvObjCategory != null {
             .srvObjCategory = parsed.srvObjCategory
           }
         }
 
         if is_null(.srvMethod) {
-          parsed = parse_grok!(message_value, "srvMethod\\\":\\\"%{NOTSPACE:srvMethod}\\\"")
+          parsed, _ = parse_grok(message_value, "srvMethod:\"%{NOTSPACE:srvMethod}\"")
           if parsed != null && parsed.srvMethod != null {
             .srvMethod = parsed.srvMethod
           }
         }
 
         if is_null(.Purge_Tool) {
-          parsed = parse_grok!(message_value, "purge_tool\\\":\\\"%{NOTSPACE:Purge_Tool}\\\"")
+          parsed, _ = parse_grok(message_value, "purge_tool:\"%{NOTSPACE:Purge_Tool}\"")
           if parsed != null && parsed.Purge_Tool != null {
             .Purge_Tool = parsed.Purge_Tool
           }
@@ -177,8 +177,8 @@ transforms:
       }
 
       if .MGtag == "null" && .Ptag != "null" && .Ltag != "null" {
-        product_str, err = to_string(.product)
-        layer_str, err = to_string(.layer)
+        product_str, _ = to_string(.product)
+        layer_str, _ = to_string(.layer)
         if product_str != null && layer_str != null {
           .maskGroupId = product_str + "-" + layer_str
         }
@@ -190,14 +190,14 @@ transforms:
 
       query_phase = false
       if !is_null(.IsQueryPhase) {
-        is_query_phase_str, err = to_string(.IsQueryPhase)
+        is_query_phase_str, _ = to_string(.IsQueryPhase)
         if is_query_phase_str != null && contains(is_query_phase_str, "Y") {
           query_phase = true
         }
       }
 
       if !query_phase && !is_null(.rqstType) {
-        rqst_type_str, err = to_string(.rqstType)
+        rqst_type_str, _ = to_string(.rqstType)
         if rqst_type_str != null && contains(rqst_type_str, "PHASE") {
           query_phase = true
         }
@@ -237,3 +237,86 @@ sinks:
       retry_max_duration_secs: 3600
     healthcheck:
       enabled: false
+
+tests:
+  - name: "Unit: parse core fields"
+    inputs:
+      - insert_at: parse_fields
+        type: log
+        log_fields:
+          message: 'Rep_DisplayInfo mask_group_id:"TMEF78-376A-M001" product:"TMEF78" layer:"376A-M001" Action:"CREATE:MG001" mask_lot_id:"EBGN29J.1" rqstType:"QUERY" IsQueryPhase:"N" srvObjCategory:"MASK" srvMethod:"GET_MASK_INFO" purge_tool:"PURGE_V1" MaskListNo=123'
+          path: "/app/log/web_hmib_1.log"
+    outputs:
+      - extract_from: parse_fields
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.system, "ledgendary")
+              assert_eq!(.type, "ap_log")
+              assert_eq!(.filename, "web_hmib_1.log")
+              assert_eq!(.product, "TMEF78")
+              assert_eq!(.layer, "376A-M001")
+              assert_eq!(.maskGroupId, "TMEF78-376A-M001")
+              assert_eq!(.maskLotId, "EBGN29J.1")
+              assert_eq!(.Action, "CREATE")
+              assert_eq!(.MaskListNo, 123)
+              assert!(is_integer(.MaskListNo))
+              assert_eq!(.rqstType, "QUERY")
+              assert_eq!(.IsQueryPhase, "N")
+              assert_eq!(.srvObjCategory, "MASK")
+              assert_eq!(.srvMethod, "GET_MASK_INFO")
+              assert_eq!(.Purge_Tool, "PURGE_V1")
+  - name: "Unit: derive maskGroupId"
+    inputs:
+      - insert_at: parse_fields
+        type: log
+        log_fields:
+          message: 'product:"TMEF78" layer:"376A-M001"'
+    outputs:
+      - extract_from: parse_fields
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.MGtag, "null")
+              assert_eq!(.maskGroupId, "TMEF78-376A-M001")
+              assert!(!exists(.Ptag))
+              assert!(!exists(.Ltag))
+  - name: "Unit: query phase field removal"
+    inputs:
+      - insert_at: parse_fields
+        type: log
+        log_fields:
+          message: 'mask_group_id:"TMEF78-376A-M001" product:"TMEF78" layer:"376A-M001" mask_lot_id:"EBGN29J.1" IsQueryPhase:"Y"'
+    outputs:
+      - extract_from: parse_fields
+        conditions:
+          - type: vrl
+            source: |
+              assert!(!exists(.maskLotId))
+              assert!(!exists(.maskGroupId))
+              assert!(!exists(.product))
+              assert!(!exists(.layer))
+  - name: "Integration: multiline sample"
+    inputs:
+      - insert_at: parse_fields
+        type: log
+        log_fields:
+          message: |
+            [2026-01-16 09:10:33:130]   [a027d5c0-8560-49e7-8f82-70901077a4bf] [TRACE] before SysUuid::set(): curSysUuid=a027d5c0-8560-49e7-8f82-70901077a4bf, preSysUuid=
+            [2026-01-16 09:10:33:142]   [8e475fe2-0680-41f2-b734-20cd691d05f9] [TRACE] after SysUuid::set(): curSysUuid=8e475fe2-0680-41f2-b734-20cd691d05f9, preSysUuid=a027d5c0-8560-49e7-8f82-70901077a4bf
+            [2026-01-16 09:10:33:166]   [8e475fe2-0680-41f2-b734-20cd691d05f9] Rqst_DisplayInfo {"mask_lot_id":"EBGN29J.1"}
+            [2026-01-16 09:10:33:203]   [8e475fe2-0680-41f2-b734-20cd691d05f9] CMMSSrv::DisplayInfo() Begin ***
+            [2026-01-16 09:10:33:210]   [8e475fe2-0680-41f2-b734-20cd691d05f9] MASKLOTID = 'EBGN29J.1'
+            [2026-01-16 09:10:33:210]   [8e475fe2-0680-41f2-b734-20cd691d05f9] CMMSSrv::DisplayInfo() END ***
+            [2026-01-16 09:10:33:211]   [8e475fe2-0680-41f2-b734-20cd691d05f9] Rep_DisplayInfo mask_group_id:"TMEF78-376A-M001" product:"TMEF78" layer:"376A-M001"
+          path: "/app/log/web_hmib_1.log"
+    outputs:
+      - extract_from: parse_fields
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.filename, "web_hmib_1.log")
+              assert_eq!(.maskLotId, "EBGN29J.1")
+              assert_eq!(.maskGroupId, "TMEF78-376A-M001")
+              assert_eq!(.product, "TMEF78")
+              assert_eq!(.layer, "376A-M001")
