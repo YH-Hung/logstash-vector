@@ -1,0 +1,75 @@
+<source>
+    @type tail
+    path /var/log/*.log
+    pos_file /tmp/trace.log.pos
+    tag kubernetes.*
+    skip_refresh_on_startup true
+    read_from_head true
+    <parse>
+        @type multiline
+        format_firstline /^\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}:\\d{3}\\]\\s+\\[[^\\]]+\\]\\s+.*$/
+        format1 /(?<message>.*)/
+    </parse>
+</source>
+
+<filter kubernetes.**>
+    @type parser
+    key_name message
+    reserve_data true
+    <parse>
+        @type regexp
+        expression /^\\[(?<log_timestamp>\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}:\\d{3})\\]\\s+\\[(?<txid>[^\\]]+)\\]\\s+(?<message>.*)/
+        keep_time_key true
+        time_key log_timestamp
+        time_format %Y-%m-%d %H:%M:%S:%L
+        timezone +08
+    </parse>
+</filter>
+
+<filter kubernetes.** >
+    @type record_transformer
+    <record>
+        kubernetes.host \"#{ENV['NODE_NAME']}\"
+    </record>
+    <record>
+        kubernetes.namespace_name \"#{ENV['POD_NAMESPACE']}\"
+    </record>
+    <record>
+        kubernetes.pod_name \"#{ENV['POD_NAME']}\"
+    </record>
+    <record>
+        POD_LABEL_NAME \"#{ENV['POD_LABEL_NAME']}\"
+    </record>
+</filter>
+
+<match kubernetes.** >
+    @type elasticsearch
+    @log_level trace
+    host elasticsearch-fz1.engmon.svc.cluster.local
+    port 9200
+    scheme http
+    ssl_verify true
+    ssl_version TLSV1_2
+    user use_default
+    password use_default
+    suppress_type_name true
+    default_elasticsearch_version 7
+    logstash_prefix \"#{ENV['POD_NAMESPACE']}\"
+    logstash_dateformat '%Y.%m.%d'
+    logstash_format true
+    max_retry_get_es_version 5
+    max_retry_putting_template 5
+    reload_connection false
+    reconnect_on_error true
+    reload_on_failure true
+    log_es_400_reason true
+
+    <buffer tag,time>
+        flush_interval 5s
+        chunk_limit_size 8M
+        retry_forever true
+        overflow_action block
+        timekey 10s
+        timekey_wait 5s
+    </buffer>
+</match>
