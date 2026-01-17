@@ -64,20 +64,20 @@ The system must extract the following fields using grok patterns with fallback a
    - **Example**: From `/app/log/web_hmib_1.log` → extracts `web_hmib_1.log`
 
 #### Primary Fields (Single Pattern)
-2. **product** - `.*(?i)product:"%{NOTSPACE:product}"`
-   - **Meaning**: Matches any text followed by "product:" (case-insensitive) and captures the quoted value
-   - **Pattern Breakdown**: `.*` matches anything, `(?i)` makes it case-insensitive, `product:` is literal text, `%{NOTSPACE:product}` captures non-space characters as the product value
+2. **product** - `.*(?i)"product":"%{NOTSPACE:product}"`
+   - **Meaning**: Matches any text followed by "product:" (case-insensitive) with quoted field name and captures the quoted value
+   - **Pattern Breakdown**: `.*` matches anything, `(?i)` makes it case-insensitive, `"product":` is literal text with quotes around field name, `%{NOTSPACE:product}` captures non-space characters as the product value
    - **Example**: From `{"product":"TMEF78"}` → extracts `TMEF78`
 
-3. **layer** - `.*(?i)layer:"%{NOTSPACE:layer}"`
-   - **Meaning**: Matches any text followed by "layer:" (case-insensitive) and captures the quoted value
-   - **Pattern Breakdown**: Similar to product pattern but matches "layer:" instead
+3. **layer** - `.*(?i)"layer":"%{NOTSPACE:layer}"`
+   - **Meaning**: Matches any text followed by "layer:" (case-insensitive) with quoted field name and captures the quoted value
+   - **Pattern Breakdown**: Similar to product pattern but matches "layer:" instead with quotes around field name
    - **Example**: From `{"layer":"376A-M001"}` → extracts `376A-M001`
 
 #### Complex Fields (Multiple Fallback Patterns)
 4. **maskGroupId** - Multiple patterns with precedence (tries each pattern in order until one matches):
-   - Pattern 1: `.*(?i)mask_?group_?id:"%{NOTSPACE:maskGroupId}"`
-     - **Meaning**: Matches "mask_group_id", "maskgroup_id", "mask_group_id", or "maskgroupid" (case-insensitive) followed by quoted value
+   - Pattern 1: `.*(?i)"mask_?group_?id":"%{NOTSPACE:maskGroupId}"`
+     - **Meaning**: Matches "mask_group_id", "maskgroup_id", "mask_group_id", or "maskgroupid" (case-insensitive) with quoted field name followed by quoted value
      - **Example**: From `{"mask_group_id":"TMEF78-376A-M001"}` → extracts `TMEF78-376A-M001`
    - Pattern 2: `.*(?i)maskGroupId->\s%{NOTSPACE:maskGroupId}`
      - **Meaning**: Matches "maskGroupId->" followed by space and value
@@ -85,24 +85,24 @@ The system must extract the following fields using grok patterns with fallback a
    - Pattern 3: `.*(?i)reticleId="%{NOTSPACE:maskGroupId}"\>`
      - **Meaning**: Matches "reticleId=" followed by quoted value and closing bracket
      - **Example**: From `reticleId="MG001">` → extracts `MG001`
-   - Pattern 4: `.*(?i)reticle_?id:"%{NOTSPACE:maskGroupId}"`
-     - **Meaning**: Matches "reticle_id" or "reticleid" (case-insensitive) followed by quoted value
-     - **Example**: From `reticle_id:"MG001"` → extracts `MG001`
+   - Pattern 4: `.*(?i)"reticle_?id":"%{NOTSPACE:maskGroupId}"`
+     - **Meaning**: Matches "reticle_id" or "reticleid" (case-insensitive) with quoted field name followed by quoted value
+     - **Example**: From `"reticle_id":"MG001"` → extracts `MG001`
    - Pattern 5: `.*(?i)reticlelotid\s->\s%{NOTSPACE:maskGroupId}`
      - **Meaning**: Matches "reticlelotid -> " followed by value
      - **Example**: From `reticlelotid -> MG001` → extracts `MG001`
 
 5. **Action** - Multiple patterns:
-   - Pattern 1: `.*(?i)Action:"%{NOTSPACE:Action}\:%{NOTSPACE:maskGroupId}"`
-     - **Meaning**: Matches "Action:" followed by value, colon, and maskGroupId value
-     - **Example**: From `Action:"CREATE:MG001"` → extracts `Action: CREATE`, `maskGroupId: MG001`
-   - Pattern 2: `.*(?i)Action:"%{NOTSPACE:Action}"`
-     - **Meaning**: Matches "Action:" followed by quoted value (fallback when no maskGroupId)
-     - **Example**: From `Action:"CREATE"` → extracts `CREATE`
+   - Pattern 1: `.*(?i)"Action":"%{NOTSPACE:Action}\:%{NOTSPACE:maskGroupId}"`
+     - **Meaning**: Matches "Action:" with quoted field name followed by value, colon, and maskGroupId value
+     - **Example**: From `"Action":"CREATE:MG001"` → extracts `Action: CREATE`, `maskGroupId: MG001`
+   - Pattern 2: `.*(?i)"Action":"%{NOTSPACE:Action}"`
+     - **Meaning**: Matches "Action:" with quoted field name followed by quoted value (fallback when no maskGroupId)
+     - **Example**: From `"Action":"CREATE"` → extracts `CREATE`
 
 6. **maskLotId** - Multiple patterns:
-   - Pattern 1: `.*(?i)mask_?lot_?id:"%{NOTSPACE:maskLotId}"`
-     - **Meaning**: Matches variations of "mask_lot_id" followed by quoted value
+   - Pattern 1: `.*(?i)"mask_?lot_?id":"%{NOTSPACE:maskLotId}"`
+     - **Meaning**: Matches variations of "mask_lot_id" with quoted field name followed by quoted value
      - **Example**: From `{"mask_lot_id":"EBGN29J.1"}` → extracts `EBGN29J.1`
    - Pattern 2: `.*(?i)maskLotId->%{NOTSPACE:maskLotId}`
      - **Meaning**: Matches "maskLotId->" followed by value (no space)
@@ -120,25 +120,25 @@ The system must extract the following fields using grok patterns with fallback a
    - **Pattern Breakdown**: `MaskListNo=` is literal text, `%{NUMBER:MaskListNo}` captures numeric value
    - **Example**: From `MaskListNo=123` → extracts `123`
 
-8. **rqstType** - `rqstType:"%{NOTSPACE:rqstType}"`
-   - **Meaning**: Matches "rqstType:" followed by quoted value
-   - **Example**: From `rqstType:"QUERY"` → extracts `QUERY`
+8. **rqstType** - `"rqstType":"%{NOTSPACE:rqstType}"`
+   - **Meaning**: Matches "rqstType:" with quoted field name followed by quoted value
+   - **Example**: From `"rqstType":"QUERY"` → extracts `QUERY`
 
-9. **IsQueryPhase** - `IsQueryPhase:"%{NOTSPACE:IsQueryPhase}"`
-   - **Meaning**: Matches "IsQueryPhase:" followed by quoted value
-   - **Example**: From `IsQueryPhase:"Y"` → extracts `Y`
+9. **IsQueryPhase** - `"IsQueryPhase":"%{NOTSPACE:IsQueryPhase}"`
+   - **Meaning**: Matches "IsQueryPhase:" with quoted field name followed by quoted value
+   - **Example**: From `"IsQueryPhase":"Y"` → extracts `Y`
 
-10. **srvObjCategory** - `srvObjCategory:"%{NOTSPACE:srvObjCategory}"`
-    - **Meaning**: Matches "srvObjCategory:" followed by quoted value
-    - **Example**: From `srvObjCategory:"MASK"` → extracts `MASK`
+10. **srvObjCategory** - `"srvObjCategory":"%{NOTSPACE:srvObjCategory}"`
+    - **Meaning**: Matches "srvObjCategory:" with quoted field name followed by quoted value
+    - **Example**: From `"srvObjCategory":"MASK"` → extracts `MASK`
 
-11. **srvMethod** - `srvMethod:"%{NOTSPACE:srvMethod}"`
-    - **Meaning**: Matches "srvMethod:" followed by quoted value
-    - **Example**: From `srvMethod:"GET_MASK_INFO"` → extracts `GET_MASK_INFO`
+11. **srvMethod** - `"srvMethod":"%{NOTSPACE:srvMethod}"`
+    - **Meaning**: Matches "srvMethod:" with quoted field name followed by quoted value
+    - **Example**: From `"srvMethod":"GET_MASK_INFO"` → extracts `GET_MASK_INFO`
 
-12. **Purge_Tool** - `purge_tool:"%{NOTSPACE:Purge_Tool}"`
-    - **Meaning**: Matches "purge_tool:" followed by quoted value
-    - **Example**: From `purge_tool:"PURGE_V1"` → extracts `PURGE_V1`
+12. **Purge_Tool** - `"purge_tool":"%{NOTSPACE:Purge_Tool}"`
+    - **Meaning**: Matches "purge_tool:" with quoted field name followed by quoted value
+    - **Example**: From `"purge_tool":"PURGE_V1"` → extracts `PURGE_V1`
 
 ### Processing Logic
 

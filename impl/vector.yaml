@@ -44,12 +44,12 @@ transforms:
     source: |
       if !is_null(.message) && is_string(.message) {
         message_value = .message
-        parsed, _ = parse_grok(message_value, ".*(?i)product:\"%{NOTSPACE:product}\"")
+        parsed, _ = parse_grok(message_value, ".*(?i)\\\"product\\\":\\\"%{NOTSPACE:product}\\\"")
         if parsed != null && parsed.product != null {
           .product = parsed.product
         }
 
-        parsed, _ = parse_grok(message_value, ".*(?i)layer:\"%{NOTSPACE:layer}\"")
+        parsed, _ = parse_grok(message_value, ".*(?i)\\\"layer\\\":\\\"%{NOTSPACE:layer}\\\"")
         if parsed != null && parsed.layer != null {
           .layer = parsed.layer
         }
@@ -65,7 +65,7 @@ transforms:
         message_value = .message
 
         if is_null(.maskGroupId) {
-          parsed, _ = parse_grok(message_value, ".*(?i)mask_?group_?id:\"%{NOTSPACE:maskGroupId}\"")
+          parsed, _ = parse_grok(message_value, ".*(?i)\\\"mask_?group_?id\\\":\\\"%{NOTSPACE:maskGroupId}\\\"")
           if parsed != null && parsed.maskGroupId != null {
             .maskGroupId = parsed.maskGroupId
           }
@@ -86,7 +86,7 @@ transforms:
         }
 
         if is_null(.maskGroupId) {
-          parsed, _ = parse_grok(message_value, ".*(?i)reticle_?id:\"%{NOTSPACE:maskGroupId}\"")
+          parsed, _ = parse_grok(message_value, ".*(?i)\\\"reticle_?id\\\":\\\"%{NOTSPACE:maskGroupId}\\\"")
           if parsed != null && parsed.maskGroupId != null {
             .maskGroupId = parsed.maskGroupId
           }
@@ -110,7 +110,7 @@ transforms:
         message_value = .message
 
         if is_null(.Action) {
-          parsed, _ = parse_grok(message_value, ".*(?i)Action:\"%{NOTSPACE:Action}:%{NOTSPACE:maskGroupId}\"")
+          parsed, _ = parse_grok(message_value, ".*(?i)\\\"Action\\\":\\\"%{NOTSPACE:Action}:%{NOTSPACE:maskGroupId}\\\"")
           if parsed != null && parsed.Action != null {
             .Action = parsed.Action
             if is_null(.maskGroupId) && parsed.maskGroupId != null {
@@ -120,7 +120,7 @@ transforms:
         }
 
         if is_null(.Action) {
-          parsed, _ = parse_grok(message_value, ".*(?i)Action:\"%{NOTSPACE:Action}\"")
+          parsed, _ = parse_grok(message_value, ".*(?i)\\\"Action\\\":\\\"%{NOTSPACE:Action}\\\"")
           if parsed != null && parsed.Action != null {
             .Action = parsed.Action
           }
@@ -137,7 +137,7 @@ transforms:
         message_value = .message
 
         if is_null(.maskLotId) {
-          parsed, _ = parse_grok(message_value, ".*(?i)mask_?lot_?id:\"%{NOTSPACE:maskLotId}\"")
+          parsed, _ = parse_grok(message_value, ".*(?i)\\\"mask_?lot_?id\\\":\\\"%{NOTSPACE:maskLotId}\\\"")
           if parsed != null && parsed.maskLotId != null {
             .maskLotId = parsed.maskLotId
           }
@@ -182,35 +182,35 @@ transforms:
         }
 
         if is_null(.rqstType) {
-          parsed, _ = parse_grok(message_value, "rqstType:\"%{NOTSPACE:rqstType}\"")
+          parsed, _ = parse_grok(message_value, "\\\"rqstType\\\":\\\"%{NOTSPACE:rqstType}\\\"")
           if parsed != null && parsed.rqstType != null {
             .rqstType = parsed.rqstType
           }
         }
 
         if is_null(.IsQueryPhase) {
-          parsed, _ = parse_grok(message_value, "IsQueryPhase:\"%{NOTSPACE:IsQueryPhase}\"")
+          parsed, _ = parse_grok(message_value, "\\\"IsQueryPhase\\\":\\\"%{NOTSPACE:IsQueryPhase}\\\"")
           if parsed != null && parsed.IsQueryPhase != null {
             .IsQueryPhase = parsed.IsQueryPhase
           }
         }
 
         if is_null(.srvObjCategory) {
-          parsed, _ = parse_grok(message_value, "srvObjCategory:\"%{NOTSPACE:srvObjCategory}\"")
+          parsed, _ = parse_grok(message_value, "\\\"srvObjCategory\\\":\\\"%{NOTSPACE:srvObjCategory}\\\"")
           if parsed != null && parsed.srvObjCategory != null {
             .srvObjCategory = parsed.srvObjCategory
           }
         }
 
         if is_null(.srvMethod) {
-          parsed, _ = parse_grok(message_value, "srvMethod:\"%{NOTSPACE:srvMethod}\"")
+          parsed, _ = parse_grok(message_value, "\\\"srvMethod\\\":\\\"%{NOTSPACE:srvMethod}\\\"")
           if parsed != null && parsed.srvMethod != null {
             .srvMethod = parsed.srvMethod
           }
         }
 
         if is_null(.Purge_Tool) {
-          parsed, _ = parse_grok(message_value, "purge_tool:\"%{NOTSPACE:Purge_Tool}\"")
+          parsed, _ = parse_grok(message_value, "\\\"purge_tool\\\":\\\"%{NOTSPACE:Purge_Tool}\\\"")
           if parsed != null && parsed.Purge_Tool != null {
             .Purge_Tool = parsed.Purge_Tool
           }
@@ -382,7 +382,7 @@ tests:
       - insert_at: parse_core_fields
         type: log
         log_fields:
-          message: 'product:"TMEF78" layer:"376A-M001"'
+          message: '"product":"TMEF78" "layer":"376A-M001"'
     outputs:
       - extract_from: parse_core_fields
         conditions:
@@ -410,7 +410,7 @@ tests:
       - insert_at: parse_core_fields
         type: log
         log_fields:
-          message: 'PRODUCT:"ABC123" LAYER:"XYZ"'
+          message: '"PRODUCT":"ABC123" "LAYER":"XYZ"'
     outputs:
       - extract_from: parse_core_fields
         conditions:
@@ -427,7 +427,7 @@ tests:
       - insert_at: parse_mask_group_id
         type: log
         log_fields:
-          message: 'mask_group_id:"TMEF78-376A-M001"'
+          message: '"mask_group_id":"TMEF78-376A-M001"'
     outputs:
       - extract_from: parse_mask_group_id
         conditions:
@@ -466,7 +466,7 @@ tests:
       - insert_at: parse_mask_group_id
         type: log
         log_fields:
-          message: 'reticle_id:"MG003"'
+          message: '"reticle_id":"MG003"'
     outputs:
       - extract_from: parse_mask_group_id
         conditions:
@@ -505,7 +505,7 @@ tests:
       - insert_at: parse_mask_group_id
         type: log
         log_fields:
-          message: 'mask_group_id:"NEW_VALUE"'
+          message: '"mask_group_id":"NEW_VALUE"'
           maskGroupId: "EXISTING_VALUE"
     outputs:
       - extract_from: parse_mask_group_id
@@ -522,7 +522,7 @@ tests:
       - insert_at: parse_action
         type: log
         log_fields:
-          message: 'Action:"CREATE:MG001"'
+          message: '"Action":"CREATE:MG001"'
     outputs:
       - extract_from: parse_action
         conditions:
@@ -536,7 +536,7 @@ tests:
       - insert_at: parse_action
         type: log
         log_fields:
-          message: 'Action:"DELETE"'
+          message: '"Action":"DELETE"'
     outputs:
       - extract_from: parse_action
         conditions:
@@ -562,7 +562,7 @@ tests:
       - insert_at: parse_action
         type: log
         log_fields:
-          message: 'Action:"UPDATE:NEW_MG"'
+          message: '"Action":"UPDATE:NEW_MG"'
           maskGroupId: "EXISTING_MG"
     outputs:
       - extract_from: parse_action
@@ -580,7 +580,7 @@ tests:
       - insert_at: parse_mask_lot_id
         type: log
         log_fields:
-          message: 'mask_lot_id:"EBGN29J.1"'
+          message: '"mask_lot_id":"EBGN29J.1"'
     outputs:
       - extract_from: parse_mask_lot_id
         conditions:
@@ -648,7 +648,7 @@ tests:
       - insert_at: parse_other_fields
         type: log
         log_fields:
-          message: 'MaskListNo=123 rqstType:"QUERY" IsQueryPhase:"N" srvObjCategory:"MASK" srvMethod:"GET_MASK_INFO" purge_tool:"PURGE_V1"'
+          message: 'MaskListNo=123 "rqstType":"QUERY" "IsQueryPhase":"N" "srvObjCategory":"MASK" "srvMethod":"GET_MASK_INFO" "purge_tool":"PURGE_V1"'
     outputs:
       - extract_from: parse_other_fields
         conditions:
@@ -666,7 +666,7 @@ tests:
       - insert_at: parse_other_fields
         type: log
         log_fields:
-          message: 'MaskListNo=456 IsQueryPhase:"Y"'
+          message: 'MaskListNo=456 "IsQueryPhase":"Y"'
     outputs:
       - extract_from: parse_other_fields
         conditions:
@@ -809,7 +809,7 @@ tests:
       - insert_at: enrich_static
         type: log
         log_fields:
-          message: 'Rep_DisplayInfo mask_group_id:"TMEF78-376A-M001" product:"TMEF78" layer:"376A-M001" Action:"CREATE:MG001" mask_lot_id:"EBGN29J.1" rqstType:"QUERY" IsQueryPhase:"N" srvObjCategory:"MASK" srvMethod:"GET_MASK_INFO" purge_tool:"PURGE_V1" MaskListNo=123'
+          message: 'Rep_DisplayInfo "mask_group_id":"TMEF78-376A-M001" "product":"TMEF78" "layer":"376A-M001" "Action":"CREATE:MG001" "mask_lot_id":"EBGN29J.1" "rqstType":"QUERY" "IsQueryPhase":"N" "srvObjCategory":"MASK" "srvMethod":"GET_MASK_INFO" "purge_tool":"PURGE_V1" MaskListNo=123'
           path: "/app/log/web_hmib_1.log"
     outputs:
       - extract_from: derive_and_cleanup
@@ -844,7 +844,7 @@ tests:
             [2026-01-16 09:10:33:203]   [8e475fe2-0680-41f2-b734-20cd691d05f9] CMMSSrv::DisplayInfo() Begin ***
             [2026-01-16 09:10:33:210]   [8e475fe2-0680-41f2-b734-20cd691d05f9] MASKLOTID = 'EBGN29J.1'
             [2026-01-16 09:10:33:210]   [8e475fe2-0680-41f2-b734-20cd691d05f9] CMMSSrv::DisplayInfo() END ***
-            [2026-01-16 09:10:33:211]   [8e475fe2-0680-41f2-b734-20cd691d05f9] Rep_DisplayInfo mask_group_id:"TMEF78-376A-M001" product:"TMEF78" layer:"376A-M001"
+            [2026-01-16 09:10:33:211]   [8e475fe2-0680-41f2-b734-20cd691d05f9] Rep_DisplayInfo "mask_group_id":"TMEF78-376A-M001" "product":"TMEF78" "layer":"376A-M001"
           path: "/app/log/web_hmib_1.log"
     outputs:
       - extract_from: derive_and_cleanup
