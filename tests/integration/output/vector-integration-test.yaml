@@ -1,0 +1,271 @@
+data_dir: /Users/yinghanhung/Projects/AI/logstash-vector/tmp/vector
+
+sources:
+  ap_log_files:
+    type: file
+    include:
+      - /Users/yinghanhung/Projects/AI/logstash-vector/tests/integration/data/samples/web_*.log
+    read_from: beginning
+    file_key: path
+    multiline:
+      start_pattern: '^\[.*\]\s\s\s\[.*\]\s\[TRACE\]\sbefore\sSysUuid::set\(\):\scurSysUuid=.*'
+      condition_pattern: '^\[.*\]\s\s\s\[.*\]\s\[TRACE\]\sbefore\sSysUuid::set\(\):\scurSysUuid=.*'
+      mode: halt_before
+      timeout_ms: 1000
+
+transforms:
+  enrich_static:
+    type: remap
+    inputs:
+      - ap_log_files
+    source: |
+      .system = "legendary"
+      .type = "ap_log"
+
+  parse_filename:
+    type: remap
+    inputs:
+      - enrich_static
+    source: |
+      if !is_null(.path) && is_string(.path) {
+        filename_parsed, _ = parse_grok(.path, "%{GREEDYDATA}/%{NOTSPACE:filename}")
+        if filename_parsed != null && filename_parsed.filename != null {
+          .filename = filename_parsed.filename
+        }
+      }
+
+  parse_core_fields:
+    type: remap
+    inputs:
+      - parse_filename
+    source: |
+      if !is_null(.message) && is_string(.message) {
+        message_value = .message
+        parsed, _ = parse_grok(message_value, s'.*(?i)"product":"%{NOTSPACE:product}"')
+        if parsed != null && parsed.product != null {
+          .product = parsed.product
+        }
+
+        parsed, _ = parse_grok(message_value, s'.*(?i)"layer":"%{NOTSPACE:layer}"')
+        if parsed != null && parsed.layer != null {
+          .layer = parsed.layer
+        }
+      }
+
+  parse_mask_group_id:
+    type: remap
+    inputs:
+      - parse_core_fields
+    source: |
+      if !is_null(.message) && is_string(.message) {
+        message_value = .message
+
+        if is_null(.maskGroupId) {
+          parsed, _ = parse_grok(message_value, s'.*(?i)"mask_?group_?id":"%{NOTSPACE:maskGroupId}"')
+          if parsed != null && parsed.maskGroupId != null {
+            .maskGroupId = parsed.maskGroupId
+          }
+        }
+
+        if is_null(.maskGroupId) {
+          parsed, _ = parse_grok(message_value, ".*(?i)maskGroupId-> %{NOTSPACE:maskGroupId}")
+          if parsed != null && parsed.maskGroupId != null {
+            .maskGroupId = parsed.maskGroupId
+          }
+        }
+
+        if is_null(.maskGroupId) {
+          parsed, _ = parse_grok(message_value, s'.*(?i)reticleId="%{NOTSPACE:maskGroupId}">')
+          if parsed != null && parsed.maskGroupId != null {
+            .maskGroupId = parsed.maskGroupId
+          }
+        }
+
+        if is_null(.maskGroupId) {
+          parsed, _ = parse_grok(message_value, s'.*(?i)"reticle_?id":"%{NOTSPACE:maskGroupId}"')
+          if parsed != null && parsed.maskGroupId != null {
+            .maskGroupId = parsed.maskGroupId
+          }
+        }
+
+        if is_null(.maskGroupId) {
+          parsed, _ = parse_grok(message_value, ".*(?i)reticlelotid -> %{NOTSPACE:maskGroupId}")
+          if parsed != null && parsed.maskGroupId != null {
+            .maskGroupId = parsed.maskGroupId
+          }
+        }
+      }
+
+  parse_action:
+    type: remap
+    inputs:
+      - parse_mask_group_id
+    source: |
+      if !is_null(.message) && is_string(.message) {
+        message_value = .message
+
+        if is_null(.Action) {
+          parsed, _ = parse_grok(message_value, s'.*(?i)"Action":"%{NOTSPACE:Action}:%{NOTSPACE:maskGroupId}"')
+          if parsed != null && parsed.Action != null {
+            .Action = parsed.Action
+            if is_null(.maskGroupId) && parsed.maskGroupId != null {
+              .maskGroupId = parsed.maskGroupId
+            }
+          }
+        }
+
+        if is_null(.Action) {
+          parsed, _ = parse_grok(message_value, s'.*(?i)"Action":"%{NOTSPACE:Action}"')
+          if parsed != null && parsed.Action != null {
+            .Action = parsed.Action
+          }
+        }
+      }
+
+  parse_mask_lot_id:
+    type: remap
+    inputs:
+      - parse_action
+    source: |
+      if !is_null(.message) && is_string(.message) {
+        message_value = .message
+
+        if is_null(.maskLotId) {
+          parsed, _ = parse_grok(message_value, s'.*(?i)"mask_?lot_?id":"%{NOTSPACE:maskLotId}"')
+          if parsed != null && parsed.maskLotId != null {
+            .maskLotId = parsed.maskLotId
+          }
+        }
+
+        if is_null(.maskLotId) {
+          parsed, _ = parse_grok(message_value, ".*(?i)maskLotId->%{NOTSPACE:maskLotId}")
+          if parsed != null && parsed.maskLotId != null {
+            .maskLotId = parsed.maskLotId
+          }
+        }
+
+        if is_null(.maskLotId) {
+          parsed, _ = parse_grok(message_value, ".*(?i)maskLotId-> %{NOTSPACE:maskLotId}")
+          if parsed != null && parsed.maskLotId != null {
+            .maskLotId = parsed.maskLotId
+          }
+        }
+
+        if is_null(.maskLotId) {
+          parsed, _ = parse_grok(message_value, ".*(?i)maskLotId = '%{NOTSPACE:maskLotId}'")
+          if parsed != null && parsed.maskLotId != null {
+            .maskLotId = parsed.maskLotId
+          }
+        }
+      }
+
+  parse_other_fields:
+    type: remap
+    inputs:
+      - parse_mask_lot_id
+    source: |
+      if !is_null(.message) && is_string(.message) {
+        message_value = .message
+
+        if is_null(.MaskListNo) {
+          parsed, _ = parse_grok(message_value, "MaskListNo=%{NUMBER:MaskListNo}")
+          if parsed != null && parsed.MaskListNo != null {
+            .MaskListNo = parsed.MaskListNo
+          }
+        }
+
+        if is_null(.rqstType) {
+          parsed, _ = parse_grok(message_value, s'"rqstType":"%{NOTSPACE:rqstType}"')
+          if parsed != null && parsed.rqstType != null {
+            .rqstType = parsed.rqstType
+          }
+        }
+
+        if is_null(.IsQueryPhase) {
+          parsed, _ = parse_grok(message_value, s'"IsQueryPhase":"%{NOTSPACE:IsQueryPhase}"')
+          if parsed != null && parsed.IsQueryPhase != null {
+            .IsQueryPhase = parsed.IsQueryPhase
+          }
+        }
+
+        if is_null(.srvObjCategory) {
+          parsed, _ = parse_grok(message_value, s'"srvObjCategory":"%{NOTSPACE:srvObjCategory}"')
+          if parsed != null && parsed.srvObjCategory != null {
+            .srvObjCategory = parsed.srvObjCategory
+          }
+        }
+
+        if is_null(.srvMethod) {
+          parsed, _ = parse_grok(message_value, s'"srvMethod":"%{NOTSPACE:srvMethod}"')
+          if parsed != null && parsed.srvMethod != null {
+            .srvMethod = parsed.srvMethod
+          }
+        }
+
+        if is_null(.Purge_Tool) {
+          parsed, _ = parse_grok(message_value, s'"purge_tool":"%{NOTSPACE:Purge_Tool}"')
+          if parsed != null && parsed.Purge_Tool != null {
+            .Purge_Tool = parsed.Purge_Tool
+          }
+        }
+      }
+
+  derive_and_cleanup:
+    type: remap
+    inputs:
+      - parse_other_fields
+    source: |
+      if is_null(.maskGroupId) {
+        .MGtag = "null"
+      }
+
+      if is_null(.product) {
+        .Ptag = "null"
+      }
+
+      if is_null(.layer) {
+        .Ltag = "null"
+      }
+
+      if .MGtag == "null" && .Ptag != "null" && .Ltag != "null" {
+        product_str, _ = to_string(.product)
+        layer_str, _ = to_string(.layer)
+        if product_str != null && layer_str != null {
+          .maskGroupId = product_str + "-" + layer_str
+        }
+      }
+
+      if !is_null(.MaskListNo) {
+        .MaskListNo = to_int!(.MaskListNo)
+      }
+
+      query_phase = false
+      if !is_null(.IsQueryPhase) {
+        is_query_phase_str, _ = to_string(.IsQueryPhase)
+        if is_query_phase_str != null && contains(is_query_phase_str, "Y") {
+          query_phase = true
+        }
+      }
+
+      if !query_phase && !is_null(.rqstType) {
+        rqst_type_str, _ = to_string(.rqstType)
+        if rqst_type_str != null && contains(rqst_type_str, "PHASE") {
+          query_phase = true
+        }
+      }
+
+      if query_phase {
+        del(.maskLotId)
+        del(.maskGroupId)
+        del(.product)
+        del(.layer)
+      }
+
+sinks:
+  json_output:
+    type: file
+    inputs:
+      - derive_and_cleanup
+    path: /Users/yinghanhung/Projects/AI/logstash-vector/tests/integration/output/vector-output.json
+    encoding:
+      codec: json

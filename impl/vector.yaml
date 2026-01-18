@@ -44,12 +44,12 @@ transforms:
     source: |
       if !is_null(.message) && is_string(.message) {
         message_value = .message
-        parsed, _ = parse_grok(message_value, ".*(?i)\\\"product\\\":\\\"%{NOTSPACE:product}\\\"")
+        parsed, _ = parse_grok(message_value, s'.*(?i)"product":"%{NOTSPACE:product}"')
         if parsed != null && parsed.product != null {
           .product = parsed.product
         }
 
-        parsed, _ = parse_grok(message_value, ".*(?i)\\\"layer\\\":\\\"%{NOTSPACE:layer}\\\"")
+        parsed, _ = parse_grok(message_value, s'.*(?i)"layer":"%{NOTSPACE:layer}"')
         if parsed != null && parsed.layer != null {
           .layer = parsed.layer
         }
@@ -65,7 +65,7 @@ transforms:
         message_value = .message
 
         if is_null(.maskGroupId) {
-          parsed, _ = parse_grok(message_value, ".*(?i)\\\"mask_?group_?id\\\":\\\"%{NOTSPACE:maskGroupId}\\\"")
+          parsed, _ = parse_grok(message_value, s'.*(?i)"mask_?group_?id":"%{NOTSPACE:maskGroupId}"')
           if parsed != null && parsed.maskGroupId != null {
             .maskGroupId = parsed.maskGroupId
           }
@@ -79,14 +79,14 @@ transforms:
         }
 
         if is_null(.maskGroupId) {
-          parsed, _ = parse_grok(message_value, ".*(?i)reticleId=\\\"%{NOTSPACE:maskGroupId}\\\">")
+          parsed, _ = parse_grok(message_value, s'.*(?i)reticleId="%{NOTSPACE:maskGroupId}">')
           if parsed != null && parsed.maskGroupId != null {
             .maskGroupId = parsed.maskGroupId
           }
         }
 
         if is_null(.maskGroupId) {
-          parsed, _ = parse_grok(message_value, ".*(?i)\\\"reticle_?id\\\":\\\"%{NOTSPACE:maskGroupId}\\\"")
+          parsed, _ = parse_grok(message_value, s'.*(?i)"reticle_?id":"%{NOTSPACE:maskGroupId}"')
           if parsed != null && parsed.maskGroupId != null {
             .maskGroupId = parsed.maskGroupId
           }
@@ -110,7 +110,7 @@ transforms:
         message_value = .message
 
         if is_null(.Action) {
-          parsed, _ = parse_grok(message_value, ".*(?i)\\\"Action\\\":\\\"%{NOTSPACE:Action}:%{NOTSPACE:maskGroupId}\\\"")
+          parsed, _ = parse_grok(message_value, s'.*(?i)"Action":"%{NOTSPACE:Action}:%{NOTSPACE:maskGroupId}"')
           if parsed != null && parsed.Action != null {
             .Action = parsed.Action
             if is_null(.maskGroupId) && parsed.maskGroupId != null {
@@ -120,7 +120,7 @@ transforms:
         }
 
         if is_null(.Action) {
-          parsed, _ = parse_grok(message_value, ".*(?i)\\\"Action\\\":\\\"%{NOTSPACE:Action}\\\"")
+          parsed, _ = parse_grok(message_value, s'.*(?i)"Action":"%{NOTSPACE:Action}"')
           if parsed != null && parsed.Action != null {
             .Action = parsed.Action
           }
@@ -137,7 +137,7 @@ transforms:
         message_value = .message
 
         if is_null(.maskLotId) {
-          parsed, _ = parse_grok(message_value, ".*(?i)\\\"mask_?lot_?id\\\":\\\"%{NOTSPACE:maskLotId}\\\"")
+          parsed, _ = parse_grok(message_value, s'.*(?i)"mask_?lot_?id":"%{NOTSPACE:maskLotId}"')
           if parsed != null && parsed.maskLotId != null {
             .maskLotId = parsed.maskLotId
           }
@@ -182,35 +182,35 @@ transforms:
         }
 
         if is_null(.rqstType) {
-          parsed, _ = parse_grok(message_value, "\\\"rqstType\\\":\\\"%{NOTSPACE:rqstType}\\\"")
+          parsed, _ = parse_grok(message_value, s'"rqstType":"%{NOTSPACE:rqstType}"')
           if parsed != null && parsed.rqstType != null {
             .rqstType = parsed.rqstType
           }
         }
 
         if is_null(.IsQueryPhase) {
-          parsed, _ = parse_grok(message_value, "\\\"IsQueryPhase\\\":\\\"%{NOTSPACE:IsQueryPhase}\\\"")
+          parsed, _ = parse_grok(message_value, s'"IsQueryPhase":"%{NOTSPACE:IsQueryPhase}"')
           if parsed != null && parsed.IsQueryPhase != null {
             .IsQueryPhase = parsed.IsQueryPhase
           }
         }
 
         if is_null(.srvObjCategory) {
-          parsed, _ = parse_grok(message_value, "\\\"srvObjCategory\\\":\\\"%{NOTSPACE:srvObjCategory}\\\"")
+          parsed, _ = parse_grok(message_value, s'"srvObjCategory":"%{NOTSPACE:srvObjCategory}"')
           if parsed != null && parsed.srvObjCategory != null {
             .srvObjCategory = parsed.srvObjCategory
           }
         }
 
         if is_null(.srvMethod) {
-          parsed, _ = parse_grok(message_value, "\\\"srvMethod\\\":\\\"%{NOTSPACE:srvMethod}\\\"")
+          parsed, _ = parse_grok(message_value, s'"srvMethod":"%{NOTSPACE:srvMethod}"')
           if parsed != null && parsed.srvMethod != null {
             .srvMethod = parsed.srvMethod
           }
         }
 
         if is_null(.Purge_Tool) {
-          parsed, _ = parse_grok(message_value, "\\\"purge_tool\\\":\\\"%{NOTSPACE:Purge_Tool}\\\"")
+          parsed, _ = parse_grok(message_value, s'"purge_tool":"%{NOTSPACE:Purge_Tool}"')
           if parsed != null && parsed.Purge_Tool != null {
             .Purge_Tool = parsed.Purge_Tool
           }
@@ -440,7 +440,7 @@ tests:
       - insert_at: parse_mask_group_id
         type: log
         log_fields:
-          message: 'maskGroupId-> MG001'
+          message: "maskGroupId-> MG001"
     outputs:
       - extract_from: parse_mask_group_id
         conditions:
@@ -479,7 +479,7 @@ tests:
       - insert_at: parse_mask_group_id
         type: log
         log_fields:
-          message: 'reticlelotid -> MG004'
+          message: "reticlelotid -> MG004"
     outputs:
       - extract_from: parse_mask_group_id
         conditions:
@@ -492,7 +492,7 @@ tests:
       - insert_at: parse_mask_group_id
         type: log
         log_fields:
-          message: 'no maskGroupId here'
+          message: "no maskGroupId here"
     outputs:
       - extract_from: parse_mask_group_id
         conditions:
@@ -549,7 +549,7 @@ tests:
       - insert_at: parse_action
         type: log
         log_fields:
-          message: 'no action here'
+          message: "no action here"
     outputs:
       - extract_from: parse_action
         conditions:
@@ -593,7 +593,7 @@ tests:
       - insert_at: parse_mask_lot_id
         type: log
         log_fields:
-          message: 'maskLotId->ML001'
+          message: "maskLotId->ML001"
     outputs:
       - extract_from: parse_mask_lot_id
         conditions:
@@ -606,7 +606,7 @@ tests:
       - insert_at: parse_mask_lot_id
         type: log
         log_fields:
-          message: 'maskLotId-> ML002'
+          message: "maskLotId-> ML002"
     outputs:
       - extract_from: parse_mask_lot_id
         conditions:
@@ -632,7 +632,7 @@ tests:
       - insert_at: parse_mask_lot_id
         type: log
         log_fields:
-          message: 'no maskLotId here'
+          message: "no maskLotId here"
     outputs:
       - extract_from: parse_mask_lot_id
         conditions:
@@ -682,7 +682,7 @@ tests:
       - insert_at: parse_other_fields
         type: log
         log_fields:
-          message: 'no special fields here'
+          message: "no special fields here"
     outputs:
       - extract_from: parse_other_fields
         conditions:
