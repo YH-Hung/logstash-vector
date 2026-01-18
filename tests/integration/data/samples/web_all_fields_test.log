@@ -1,7 +1,20 @@
-[2026-01-17 11:00:00:000]   [uuid-all-001] [TRACE] before SysUuid::set(): curSysUuid=uuid-all-001, preSysUuid=
-[2026-01-17 11:00:00:100]   [uuid-all-002] Rep_DisplayInfo product:"PROD001" layer:"LAYER001" mask_group_id:"PROD001-LAYER001" mask_lot_id:"LOT001" Action:"CREATE:MG001" MaskListNo=123 rqstType:"NORMAL" IsQueryPhase:"N" srvObjCategory:"MASK" srvMethod:"GET_INFO" purge_tool:"PURGE_V2"
-[2026-01-17 11:00:01:000]   [uuid-all-003] [TRACE] before SysUuid::set(): curSysUuid=uuid-all-003, preSysUuid=uuid-all-002
-[2026-01-17 11:00:01:100]   [uuid-all-004] Test alternative patterns: maskGroupId-> MG002
-[2026-01-17 11:00:01:200]   [uuid-all-005] Test reticle pattern: reticleId="MG003">
-[2026-01-17 11:00:01:300]   [uuid-all-006] Test lot pattern: maskLotId-> LOT002
-[2026-01-17 11:00:01:400]   [uuid-all-007] Test masklotid pattern: MASKLOTID = 'LOT003'
+[2026-01-17 11:00:00:000]   [f1a2b3c4-d5e6-7890-1234-567890abcdef] [TRACE] before SysUuid::set(): curSysUuid=f1a2b3c4-d5e6-7890-1234-567890abcdef, preSysUuid=
+[2026-01-17 11:00:00:010]   [a2b3c4d5-e6f7-8901-2345-67890abcdef0] [TRACE] after SysUuid::set(): curSysUuid=a2b3c4d5-e6f7-8901-2345-67890abcdef0, preSysUuid=f1a2b3c4-d5e6-7890-1234-567890abcdef
+[2026-01-17 11:00:00:020]   [a2b3c4d5-e6f7-8901-2345-67890abcdef0] Rqst_CreateMask {"mask_lot_id":"LOT001", "mask_group_id":"PROD001-LAYER001", "product":"PROD001", "layer":"LAYER001", "userId":"operator001", "sessionId":"sess-create-001", "clientIp":"192.168.2.50", "requestTime":"2026-01-17T11:00:00.020Z", "toolId":"MASK-WRITER-01", "fabId":"FAB5", "priority":"NORMAL", "targetSlot":"SLOT-A12", "maskType":"BINARY", "pellicleRequired":"Y"}
+[2026-01-17 11:00:00:030]   [a2b3c4d5-e6f7-8901-2345-67890abcdef0] CMMSSrv::CreateMask() Begin ***
+[2026-01-17 11:00:00:040]   [a2b3c4d5-e6f7-8901-2345-67890abcdef0] MASKLOTID = 'LOT001'
+[2026-01-17 11:00:00:050]   [a2b3c4d5-e6f7-8901-2345-67890abcdef0] MaskListNo=123
+[2026-01-17 11:00:00:055]   [a2b3c4d5-e6f7-8901-2345-67890abcdef0] Validating mask specifications for PROD001-LAYER001
+[2026-01-17 11:00:00:060]   [a2b3c4d5-e6f7-8901-2345-67890abcdef0] CMMSSrv::CreateMask() END ***
+[2026-01-17 11:00:00:100]   [a2b3c4d5-e6f7-8901-2345-67890abcdef0] Rep_CreateMask {"gTxId":"a2b3c4d5-e6f7-8901-2345-67890abcdef0", "product":"PROD001", "layer":"LAYER001", "mask_group_id":"PROD001-LAYER001", "mask_lot_id":"LOT001", "Action":"CREATE:MG001", "rqstType":"NORMAL", "IsQueryPhase":"N", "srvObjCategory":"MASK", "srvMethod":"CREATE_MASK", "purge_tool":"PURGE_V2", "status":"SUCCESS", "responseTime":"2026-01-17T11:00:00.100Z", "elapsedMs":80, "maskId":"MASK-20260117-001", "slotAssigned":"SLOT-A12", "storageLocation":"STOCKER-03", "qualityGrade":"A", "expirationDate":"2027-01-17", "createdBy":"operator001", "auditId":"AUD-CREATE-001"}
+[2026-01-17 11:00:01:000]   [a2b3c4d5-e6f7-8901-2345-67890abcdef0] [TRACE] before SysUuid::set(): curSysUuid=a2b3c4d5-e6f7-8901-2345-67890abcdef0, preSysUuid=f1a2b3c4-d5e6-7890-1234-567890abcdef
+[2026-01-17 11:00:01:010]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] [TRACE] after SysUuid::set(): curSysUuid=b3c4d5e6-f7a8-9012-3456-7890abcdef01, preSysUuid=a2b3c4d5-e6f7-8901-2345-67890abcdef0
+[2026-01-17 11:00:01:020]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] Rqst_QueryLot {"mask_lot_id":"LOT002", "userId":"inspector005", "sessionId":"sess-query-002", "clientIp":"192.168.2.75", "requestTime":"2026-01-17T11:00:01.020Z", "toolId":"INSPECTION-02", "fabId":"FAB5", "queryDepth":"FULL", "includeDefects":"Y", "includeHistory":"Y", "maxHistoryRecords":100}
+[2026-01-17 11:00:01:030]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] CMMSSrv::QueryLot() Begin ***
+[2026-01-17 11:00:01:040]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] maskGroupId-> MG002
+[2026-01-17 11:00:01:050]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] reticleId="MG003">
+[2026-01-17 11:00:01:060]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] maskLotId-> LOT002
+[2026-01-17 11:00:01:070]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] MASKLOTID = 'LOT003'
+[2026-01-17 11:00:01:075]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] Querying defect database for LOT002
+[2026-01-17 11:00:01:080]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] CMMSSrv::QueryLot() END ***
+[2026-01-17 11:00:01:100]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] Rep_QueryLot {"gTxId":"b3c4d5e6-f7a8-9012-3456-7890abcdef01", "mask_group_id":"MG002", "mask_lot_id":"LOT003", "product":"PRODX", "layer":"LAYERX", "status":"SUCCESS", "responseTime":"2026-01-17T11:00:01.100Z", "elapsedMs":80, "recordCount":3, "defectCount":2, "historyRecords":47, "lastInspection":"2026-01-16T14:30:00Z", "inspectionResult":"CONDITIONAL_PASS", "defectDetails":"[2 minor scratches detected]", "nextScheduledInspection":"2026-01-20T09:00:00Z", "usageCount":156, "remainingLifeCycles":844}

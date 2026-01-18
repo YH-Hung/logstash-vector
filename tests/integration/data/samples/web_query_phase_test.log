@@ -1,6 +1,21 @@
-[2026-01-17 10:15:22:100]   [test-uuid-001] [TRACE] before SysUuid::set(): curSysUuid=test-uuid-001, preSysUuid=
-[2026-01-17 10:15:22:150]   [test-uuid-002] Rep_DisplayInfo product:"TMEF78" layer:"376A-M001" maskGroupId:"TMEF78-376A-M001" maskLotId:"EBGN29J.1" IsQueryPhase:"Y"
-[2026-01-17 10:15:23:100]   [test-uuid-003] [TRACE] before SysUuid::set(): curSysUuid=test-uuid-003, preSysUuid=test-uuid-002
-[2026-01-17 10:15:23:200]   [test-uuid-004] Rep_DisplayInfo product:"TEST123" layer:"L001" maskGroupId:"TEST123-L001" maskLotId:"LOT001" rqstType:"QUERY_PHASE"
-[2026-01-17 10:15:24:100]   [test-uuid-005] [TRACE] before SysUuid::set(): curSysUuid=test-uuid-005, preSysUuid=test-uuid-004
-[2026-01-17 10:15:24:200]   [test-uuid-006] Rep_DisplayInfo product:"NORMAL" layer:"NL001" maskGroupId:"NORMAL-NL001" maskLotId:"NL-LOT" IsQueryPhase:"N"
+[2026-01-17 10:15:22:100]   [a1b2c3d4-e5f6-7890-abcd-ef1234567890] [TRACE] before SysUuid::set(): curSysUuid=a1b2c3d4-e5f6-7890-abcd-ef1234567890, preSysUuid=
+[2026-01-17 10:15:22:110]   [b2c3d4e5-f6a7-8901-bcde-f12345678901] [TRACE] after SysUuid::set(): curSysUuid=b2c3d4e5-f6a7-8901-bcde-f12345678901, preSysUuid=a1b2c3d4-e5f6-7890-abcd-ef1234567890
+[2026-01-17 10:15:22:120]   [b2c3d4e5-f6a7-8901-bcde-f12345678901] Rqst_DisplayInfo {"mask_lot_id":"EBGN29J.1", "userId":"operator001", "sessionId":"sess-abc123", "clientIp":"192.168.1.100", "requestTime":"2026-01-17T10:15:22.120Z", "toolId":"SCANNER-01", "fabId":"FAB3", "priority":"HIGH"}
+[2026-01-17 10:15:22:130]   [b2c3d4e5-f6a7-8901-bcde-f12345678901] CMMSSrv::DisplayInfo() Begin ***
+[2026-01-17 10:15:22:140]   [b2c3d4e5-f6a7-8901-bcde-f12345678901] MASKLOTID = 'EBGN29J.1'
+[2026-01-17 10:15:22:145]   [b2c3d4e5-f6a7-8901-bcde-f12345678901] CMMSSrv::DisplayInfo() END ***
+[2026-01-17 10:15:22:150]   [b2c3d4e5-f6a7-8901-bcde-f12345678901] Rep_DisplayInfo {"gTxId":"b2c3d4e5-f6a7-8901-bcde-f12345678901", "mask_group_id":"TMEF78-376A-M001", "product":"TMEF78", "layer":"376A-M001", "mask_lot_id":"EBGN29J.1", "IsQueryPhase":"Y", "status":"SUCCESS", "responseTime":"2026-01-17T10:15:22.150Z", "elapsedMs":30, "recordCount":1, "cacheHit":"N", "dbServer":"DBPROD01", "appServer":"APPSRV03"}
+[2026-01-17 10:15:23:100]   [b2c3d4e5-f6a7-8901-bcde-f12345678901] [TRACE] before SysUuid::set(): curSysUuid=b2c3d4e5-f6a7-8901-bcde-f12345678901, preSysUuid=a1b2c3d4-e5f6-7890-abcd-ef1234567890
+[2026-01-17 10:15:23:110]   [c3d4e5f6-a7b8-9012-cdef-123456789012] [TRACE] after SysUuid::set(): curSysUuid=c3d4e5f6-a7b8-9012-cdef-123456789012, preSysUuid=b2c3d4e5-f6a7-8901-bcde-f12345678901
+[2026-01-17 10:15:23:120]   [c3d4e5f6-a7b8-9012-cdef-123456789012] Rqst_GetMaskInfo {"mask_lot_id":"LOT001", "mask_group_id":"TEST123-L001", "userId":"engineer042", "sessionId":"sess-def456", "clientIp":"192.168.1.105", "requestTime":"2026-01-17T10:15:23.120Z", "toolId":"LITHO-07", "fabId":"FAB3", "queryType":"FULL", "includeHistory":"Y"}
+[2026-01-17 10:15:23:130]   [c3d4e5f6-a7b8-9012-cdef-123456789012] CMMSSrv::GetMaskInfo() Begin ***
+[2026-01-17 10:15:23:140]   [c3d4e5f6-a7b8-9012-cdef-123456789012] MASKLOTID = 'LOT001'
+[2026-01-17 10:15:23:145]   [c3d4e5f6-a7b8-9012-cdef-123456789012] CMMSSrv::GetMaskInfo() END ***
+[2026-01-17 10:15:23:200]   [c3d4e5f6-a7b8-9012-cdef-123456789012] Rep_GetMaskInfo {"gTxId":"c3d4e5f6-a7b8-9012-cdef-123456789012", "mask_group_id":"TEST123-L001", "product":"TEST123", "layer":"L001", "mask_lot_id":"LOT001", "rqstType":"QUERY_PHASE", "status":"SUCCESS", "responseTime":"2026-01-17T10:15:23.200Z", "elapsedMs":80, "recordCount":5, "historyCount":12, "lastModified":"2026-01-15T08:30:00Z", "modifiedBy":"system", "version":"2.1"}
+[2026-01-17 10:15:24:100]   [c3d4e5f6-a7b8-9012-cdef-123456789012] [TRACE] before SysUuid::set(): curSysUuid=c3d4e5f6-a7b8-9012-cdef-123456789012, preSysUuid=b2c3d4e5-f6a7-8901-bcde-f12345678901
+[2026-01-17 10:15:24:110]   [d4e5f6a7-b8c9-0123-def0-234567890123] [TRACE] after SysUuid::set(): curSysUuid=d4e5f6a7-b8c9-0123-def0-234567890123, preSysUuid=c3d4e5f6-a7b8-9012-cdef-123456789012
+[2026-01-17 10:15:24:120]   [d4e5f6a7-b8c9-0123-def0-234567890123] Rqst_UpdateNote {"mask_lot_id":"NL-LOT", "mask_group_id":"NORMAL-NL001", "userId":"supervisor007", "sessionId":"sess-ghi789", "clientIp":"192.168.1.110", "requestTime":"2026-01-17T10:15:24.120Z", "noteType":"COMMENT", "noteText":"Inspection passed with minor defects", "severity":"INFO", "attachmentId":"ATT-00123"}
+[2026-01-17 10:15:24:130]   [d4e5f6a7-b8c9-0123-def0-234567890123] CMMSSrv::UpdateNote() Begin ***
+[2026-01-17 10:15:24:140]   [d4e5f6a7-b8c9-0123-def0-234567890123] MASKLOTID = 'NL-LOT'
+[2026-01-17 10:15:24:145]   [d4e5f6a7-b8c9-0123-def0-234567890123] CMMSSrv::UpdateNote() END ***
+[2026-01-17 10:15:24:200]   [d4e5f6a7-b8c9-0123-def0-234567890123] Rep_UpdateNote {"gTxId":"d4e5f6a7-b8c9-0123-def0-234567890123", "mask_group_id":"NORMAL-NL001", "product":"NORMAL", "layer":"NL001", "mask_lot_id":"NL-LOT", "IsQueryPhase":"N", "status":"SUCCESS", "responseTime":"2026-01-17T10:15:24.200Z", "elapsedMs":80, "noteId":"NOTE-78901", "previousNoteCount":3, "totalNoteCount":4, "auditTrailId":"AUDIT-456789"}
