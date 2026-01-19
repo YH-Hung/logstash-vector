@@ -37,8 +37,8 @@ done
 
 echo -e "${YELLOW}[3/5] Running Logstash to generate baseline...${NC}"
 docker compose up -d logstash
-echo "Waiting for Logstash to process logs..."
-sleep 30
+echo "Waiting for Logstash to process logs (includes multiline auto_flush delay)..."
+sleep 45
 
 echo -e "${YELLOW}[4/5] Collecting baseline output...${NC}"
 # Copy the baseline file

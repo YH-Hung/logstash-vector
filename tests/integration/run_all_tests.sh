@@ -18,6 +18,19 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$SCRIPT_DIR"
 
+# Check for Vector and add to PATH if needed
+if ! command -v vector &> /dev/null; then
+    if [ -x "$HOME/.vector/bin/vector" ]; then
+        export PATH="$HOME/.vector/bin:$PATH"
+        echo -e "${YELLOW}Note: Added ~/.vector/bin to PATH${NC}"
+    else
+        echo -e "${RED}✗ Vector command not found.${NC}"
+        echo "Install Vector: https://vector.dev/docs/setup/installation/"
+        echo "Or if installed via official script: export PATH=\"\$HOME/.vector/bin:\$PATH\""
+        exit 1
+    fi
+fi
+
 # Track results
 TESTS_PASSED=0
 TESTS_FAILED=0

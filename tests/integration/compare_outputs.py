@@ -79,8 +79,46 @@ def compare_field(doc_idx: int, field: str, logstash_value: Any, vector_value: A
         }
 
 
+def get_doc_key(doc: Dict) -> str:
+    """Extract a unique key from document for matching.
+    Uses the first line of message (contains unique timestamp) + filename."""
+    message = doc.get('message', '')
+    first_line = message.split('\n')[0] if message else ''
+    filename = doc.get('filename', '')
+    return f"{filename}:{first_line[:80]}"  # Use first 80 chars of first line
+
+
+def match_documents(logstash_docs: List[Dict], vector_docs: List[Dict]) -> List[tuple]:
+    """Match Logstash and Vector documents by content (message first line + filename).
+    Returns list of (logstash_doc, vector_doc, match_key) tuples."""
+
+    # Build index of Vector docs by key
+    vector_by_key = {}
+    for v_doc in vector_docs:
+        key = get_doc_key(v_doc)
+        vector_by_key[key] = v_doc
+
+    # Match Logstash docs to Vector docs
+    matched_pairs = []
+    unmatched_logstash = []
+    used_vector_keys = set()
+
+    for ls_doc in logstash_docs:
+        ls_key = get_doc_key(ls_doc)
+        if ls_key in vector_by_key and ls_key not in used_vector_keys:
+            matched_pairs.append((ls_doc, vector_by_key[ls_key], ls_key))
+            used_vector_keys.add(ls_key)
+        else:
+            unmatched_logstash.append(ls_doc)
+
+    # Find unmatched Vector docs
+    unmatched_vector = [v for k, v in vector_by_key.items() if k not in used_vector_keys]
+
+    return matched_pairs, unmatched_logstash, unmatched_vector
+
+
 def compare_documents(logstash_docs: List[Dict], vector_docs: List[Dict]) -> Dict[str, Any]:
-    """Compare Logstash and Vector documents"""
+    """Compare Logstash and Vector documents by matching on message content"""
     results = {
         'total_logstash': len(logstash_docs),
         'total_vector': len(vector_docs),
@@ -89,36 +127,35 @@ def compare_documents(logstash_docs: List[Dict], vector_docs: List[Dict]) -> Dic
         'missing_in_vector': [],
         'field_stats': defaultdict(lambda: {'match': 0, 'mismatch': 0, 'missing': 0})
     }
-    
-    # Compare document counts
-    if len(logstash_docs) != len(vector_docs):
-        print(f"{YELLOW}⚠ Warning: Document count mismatch!{NC}")
-        print(f"  Logstash: {len(logstash_docs)} documents")
-        print(f"  Vector: {len(vector_docs)} documents")
-    
-    # Compare each document
-    min_docs = min(len(logstash_docs), len(vector_docs))
-    
-    for i in range(min_docs):
-        ls_doc = logstash_docs[i]
-        v_doc = vector_docs[i]
-        
+
+    # Match documents by content
+    matched_pairs, unmatched_logstash, unmatched_vector = match_documents(logstash_docs, vector_docs)
+
+    print(f"{GREEN}✓ Matched {len(matched_pairs)} document pairs by content{NC}")
+
+    if unmatched_logstash:
+        print(f"{YELLOW}⚠ {len(unmatched_logstash)} Logstash docs not matched{NC}")
+    if unmatched_vector:
+        print(f"{YELLOW}⚠ {len(unmatched_vector)} Vector docs not matched{NC}")
+
+    # Compare matched document pairs
+    for i, (ls_doc, v_doc, match_key) in enumerate(matched_pairs):
         doc_match = True
-        
+
         # Compare critical business fields
         for field in CRITICAL_FIELDS:
             ls_val = ls_doc.get(field)
             v_val = v_doc.get(field)
-            
+
             comparison = compare_field(i, field, ls_val, v_val)
-            
+
             if comparison['status'] == 'match':
                 results['field_stats'][field]['match'] += 1
             else:
                 results['field_stats'][field]['mismatch'] += 1
                 results['mismatches'].append(comparison)
                 doc_match = False
-            
+
             # Track missing fields
             if ls_val is not None and v_val is None:
                 results['field_stats'][field]['missing'] += 1
@@ -127,7 +164,7 @@ def compare_documents(logstash_docs: List[Dict], vector_docs: List[Dict]) -> Dic
                     'field': field,
                     'logstash_value': ls_val
                 })
-        
+
         # Compare metadata fields
         for field in METADATA_FIELDS:
             ls_val = ls_doc.get(field)
@@ -136,10 +173,13 @@ def compare_documents(logstash_docs: List[Dict], vector_docs: List[Dict]) -> Dic
             if comparison['status'] == 'mismatch':
                 results['mismatches'].append(comparison)
                 doc_match = False
-        
+
         if doc_match:
             results['matches'] += 1
-    
+
+    # Update totals for matched pairs only
+    results['total_matched'] = len(matched_pairs)
+
     return results
 
 
@@ -153,15 +193,16 @@ def print_summary(results: Dict[str, Any]):
     print(f"Total Documents:")
     print(f"  Logstash: {results['total_logstash']}")
     print(f"  Vector:   {results['total_vector']}")
-    
-    min_docs = min(results['total_logstash'], results['total_vector'])
-    match_rate = (results['matches'] / min_docs * 100) if min_docs > 0 else 0
+    print(f"  Matched:  {results.get('total_matched', min(results['total_logstash'], results['total_vector']))}")
+
+    matched_count = results.get('total_matched', min(results['total_logstash'], results['total_vector']))
+    match_rate = (results['matches'] / matched_count * 100) if matched_count > 0 else 0
     
     print(f"\nDocument-level Matches:")
-    if results['matches'] == min_docs:
-        print(f"  {GREEN}✓ {results['matches']}/{min_docs} documents match perfectly (100%){NC}")
+    if results['matches'] == matched_count:
+        print(f"  {GREEN}✓ {results['matches']}/{matched_count} documents match perfectly (100%){NC}")
     else:
-        print(f"  {YELLOW}⚠ {results['matches']}/{min_docs} documents match ({match_rate:.1f}%){NC}")
+        print(f"  {YELLOW}⚠ {results['matches']}/{matched_count} documents match ({match_rate:.1f}%){NC}")
     
     # Field-level statistics
     print(f"\n{BLUE}Field-by-Field Statistics:{NC}")
@@ -213,7 +254,7 @@ def print_summary(results: Dict[str, Any]):
     
     # Final verdict
     print(f"\n{BLUE}{'='*60}{NC}")
-    if results['matches'] == min_docs and not results['mismatches']:
+    if results['matches'] == matched_count and not results['mismatches']:
         print(f"{GREEN}✓ PASS: Vector output matches Logstash baseline perfectly!{NC}")
         return 0
     elif match_rate >= 90:

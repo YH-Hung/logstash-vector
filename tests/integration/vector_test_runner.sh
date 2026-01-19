@@ -11,12 +11,24 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Change to script directory
-cd "$(dirname "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
 PROJECT_ROOT="$(cd ../.. && pwd)"
+
+# Check for Vector and add to PATH if needed
+if ! command -v vector &> /dev/null; then
+    if [ -x "$HOME/.vector/bin/vector" ]; then
+        export PATH="$HOME/.vector/bin:$PATH"
+        echo -e "${YELLOW}Note: Added ~/.vector/bin to PATH${NC}"
+    fi
+fi
 
 echo -e "${YELLOW}[1/6] Preparing directories...${NC}"
 mkdir -p "$PROJECT_ROOT/tmp/vector"
 mkdir -p output
+
+# Clear Vector checkpoint data to ensure fresh file reads
+rm -rf "$PROJECT_ROOT/tmp/vector"/*
 
 echo -e "${YELLOW}[2/6] Validating Vector configuration...${NC}"
 if command -v vector &> /dev/null; then
@@ -36,14 +48,15 @@ mkdir -p output
 
 echo -e "${YELLOW}[4/6] Preparing test configuration...${NC}"
 # Create a test-specific Vector config that outputs to JSON file
+# Use quoted 'EOF' to preserve backslashes in VRL code, then sed to replace paths
 cat > output/vector-test.yaml << 'EOF'
-data_dir: ../../tmp/vector
+data_dir: __PROJECT_ROOT__/tmp/vector
 
 sources:
   ap_log_files:
     type: file
     include:
-      - ./data/samples/web_*.log
+      - __SCRIPT_DIR__/data/samples/web_*.log
     read_from: beginning
     file_key: path
     multiline:
@@ -305,7 +318,7 @@ sinks:
     type: file
     inputs:
       - derive_and_cleanup
-    path: ./output/vector-output.json
+    path: __SCRIPT_DIR__/output/vector-output.json
     encoding:
       codec: json
 
@@ -317,17 +330,21 @@ sinks:
       codec: json
 EOF
 
+# Replace placeholders with actual paths
+sed -i.bak "s|__PROJECT_ROOT__|$PROJECT_ROOT|g" output/vector-test.yaml
+sed -i.bak "s|__SCRIPT_DIR__|$SCRIPT_DIR|g" output/vector-test.yaml
+rm -f output/vector-test.yaml.bak
+
 echo -e "${GREEN}✓ Test configuration created${NC}"
 
 echo -e "${YELLOW}[5/6] Running Vector with test data...${NC}"
-cd output
+# Run Vector from SCRIPT_DIR with absolute config path
 # Run Vector in background and kill after 15 seconds (macOS doesn't have timeout)
-vector -c vector-test.yaml &
+vector -c "$SCRIPT_DIR/output/vector-test.yaml" &
 VECTOR_PID=$!
 sleep 15
 kill $VECTOR_PID 2>/dev/null || true
 wait $VECTOR_PID 2>/dev/null || true
-cd ..
 
 # Give Vector time to flush
 sleep 2

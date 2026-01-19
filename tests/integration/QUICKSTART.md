@@ -90,11 +90,6 @@ uv venv .venv
 source .venv/bin/activate
 uv pip install requests
 
-# Set up Python environment with uv (first time only)
-uv venv .venv
-source .venv/bin/activate
-uv pip install requests
-
 # Compare outputs
 python3 compare_outputs.py
 # Shows field-by-field comparison
@@ -133,7 +128,10 @@ docker compose down
 
 ### "Vector command not found"
 ```bash
-# Install Vector
+# If installed via official script, add to PATH:
+export PATH="$HOME/.vector/bin:$PATH"
+
+# Or install Vector via Homebrew:
 brew install vector  # macOS
 # OR visit: https://vector.dev/docs/setup/installation/
 ```
@@ -238,6 +236,6 @@ curl http://localhost:9200/_cat/indices
 
 **Status**: Integration testing framework is complete and ready for use!
 
-**Last Updated**: 2026-01-17
+**Last Updated**: 2026-01-19
 
-**Version**: 1.0
+**Version**: 1.1

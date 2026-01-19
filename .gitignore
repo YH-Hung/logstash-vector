@@ -74,3 +74,6 @@ test-configs/*.toml
 *.tmp
 tmp/
 .temp/
+
+# Integration test output (generated files)
+tests/integration/output/
