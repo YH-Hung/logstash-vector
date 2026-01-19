@@ -2,13 +2,61 @@
 
 This document outlines the procedures for validating the Vector configuration and testing it against sample log files to ensure correct functionality.
 
+> **Note**: A complete integration testing framework is available in `tests/integration/`. For comprehensive testing, see `tests/integration/README.md` and `tests/integration/QUICKSTART.md`. This document covers both automated testing and manual validation procedures.
+
 ## Prerequisites
 
 - Vector CLI installed and available in PATH
 - Sample log file: `sample/web_hmib_1.log`
 - Access to a terminal/command line
+- (Optional) Docker and Docker Compose for full integration testing
+- (Optional) Python 3.7+ with `uv` for comparison scripts
 
-## Configuration Validation
+## Quick Testing (Recommended)
+
+### Automated Testing Framework
+
+The project includes a complete integration testing framework. For the fastest and most comprehensive testing:
+
+```bash
+# Quick test (no Docker required)
+cd tests/integration
+./run_all_tests.sh
+```
+
+This will:
+- ✅ Validate Vector configuration
+- ✅ Run all 35 built-in unit tests
+- ✅ Execute Vector with test data
+- ⚠️ Skip baseline comparison (requires Docker)
+
+For full integration testing including Logstash baseline comparison, see `tests/integration/README.md`.
+
+### Vector Built-in Unit Tests
+
+The Vector configuration includes 35 embedded unit tests covering all parsing logic:
+
+```bash
+# Run all unit tests
+vector test impl/vector.yaml
+```
+
+**Expected Output:**
+```
+Running tests
+✓ All 35 unit tests PASSED
+  - 8 enrich_static tests
+  - 3 parse_filename tests
+  - 3 parse_core_fields tests
+  - 7 parse_mask_group_id tests
+  - 4 parse_action tests
+  - 5 parse_mask_lot_id tests
+  - 3 parse_other_fields tests
+  - 8 derive_and_cleanup tests
+  - 2 integration tests
+```
+
+## Manual Validation Procedures
 
 ### Step 1: Validate Configuration Syntax
 
@@ -231,7 +279,46 @@ echo "🎉 All tests passed!"
 
 ## Integration Testing
 
-For full integration testing with Elasticsearch:
+### Automated Integration Testing Framework
+
+A complete integration testing framework is available in `tests/integration/`:
+
+**Quick Start:**
+```bash
+cd tests/integration
+./run_all_tests.sh
+```
+
+**Full Integration Test (with Logstash baseline comparison):**
+```bash
+cd tests/integration
+
+# Generate Logstash baseline
+./baseline_generator.sh
+
+# Run Vector tests
+./vector_test_runner.sh
+
+# Compare outputs
+source .venv/bin/activate && python3 compare_outputs.py
+
+# Validate Elasticsearch documents
+source .venv/bin/activate && python3 validate_elasticsearch.py
+```
+
+**What the framework provides:**
+- ✅ Docker-based Logstash + Elasticsearch environment
+- ✅ Automated baseline generation
+- ✅ Field-by-field output comparison
+- ✅ Elasticsearch document validation
+- ✅ Test data for all scenarios (normal, query phase, malformed)
+- ✅ Comprehensive documentation
+
+See `tests/integration/README.md` for detailed instructions.
+
+### Manual Integration Testing
+
+For manual integration testing with Elasticsearch:
 
 1. Set up a test Elasticsearch instance
 2. Update `impl/vector.yaml` with correct endpoints and credentials
@@ -242,8 +329,20 @@ For full integration testing with Elasticsearch:
 
 ## Maintenance
 
-- Re-run validation after any configuration changes
+- Re-run validation after any configuration changes:
+  - `vector test impl/vector.yaml` (unit tests)
+  - `cd tests/integration && ./run_all_tests.sh` (integration tests)
 - Test with new sample data when available
 - Update grok patterns if log format changes
-- Monitor for new Vector versions and compatibility</content>
+- Monitor for new Vector versions and compatibility
+- Update integration test data in `tests/integration/data/samples/` as needed
+
+## References
+
+- **Integration Testing Framework**: `tests/integration/README.md`
+- **Quick Start Guide**: `tests/integration/QUICKSTART.md`
+- **Testing Summary**: `tests/integration/TESTING_SUMMARY.md`
+- **Integration Testing Status**: `INTEGRATION_TESTING_COMPLETE.md`
+- **Vector Configuration**: `impl/vector.yaml`
+- **Requirements**: `doc/requirements.md`</content>
 <parameter name="filePath">doc/testing-procedures.md

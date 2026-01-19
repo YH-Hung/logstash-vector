@@ -4,9 +4,13 @@
 This repository contains configuration, documentation, and sample data for a Logstash → Vector migration. There is no compiled application or conventional test suite; most work involves editing YAML, VRL, and documentation.
 
 ## Repository Layout
-- `impl/vector.yaml`: Primary Vector configuration and VRL transform logic.
+- `impl/vector.yaml`: Primary Vector configuration and VRL transform logic (includes 35 unit tests).
 - `doc/requirements.md`: Detailed migration requirements and parsing rules.
 - `doc/todo.md`: Task checklist and validation notes.
+- `doc/testing-procedures.md`: Testing procedures and validation guidelines.
+- `impl/implementation-summary.md`: Implementation summary and current status.
+- `INTEGRATION_TESTING_COMPLETE.md`: Integration testing framework summary.
+- `tests/integration/`: Complete integration testing framework with scripts, test data, and documentation.
 - `sample/`: Sample Logstash/Fluentd configs and example log file.
 - `tmp/`: Local Vector data directory (runtime output).
 
@@ -14,20 +18,28 @@ This repository contains configuration, documentation, and sample data for a Log
 ### Summary
 - No build system (no `package.json`, `pyproject.toml`, `Cargo.toml`, `Makefile`, or `go.mod`).
 - No lint config detected.
-- No automated tests detected.
+- **Testing**: Vector built-in unit tests (35 tests) + integration testing framework.
 
-### Suggested Validation (Manual)
-These commands are not defined in the repo but are common for Vector setups if the `vector` CLI is installed locally.
+### Validation Commands
+These commands are available if the `vector` CLI is installed locally.
 
 - Validate config syntax:
   - `vector validate --config impl/vector.yaml`
+- Run Vector unit tests:
+  - `vector test --config impl/vector.yaml` (runs 35 built-in tests)
 - Run Vector with the config:
   - `vector --config impl/vector.yaml`
-- Run with a specific log file (if Vector supports `--require-healthy` in your setup):
-  - `vector --config impl/vector.yaml --require-healthy`
+- Run integration tests:
+  - `cd tests/integration && ./run_all_tests.sh`
 
-### Single-Test Equivalents
-There is no test runner, so there is no single-test command. Use one of the manual checks above.
+### Testing Infrastructure
+- **Unit Tests**: 35 tests embedded in `impl/vector.yaml` covering all parsing logic
+- **Integration Tests**: Complete framework in `tests/integration/` with:
+  - Baseline generation (Logstash comparison)
+  - Output comparison tools
+  - Elasticsearch validation
+  - Test data for all scenarios
+- **Documentation**: See `tests/integration/README.md` for comprehensive testing guide
 
 ## Code Style Guidelines
 ### General
@@ -72,6 +84,7 @@ There is no test runner, so there is no single-test command. Use one of the manu
 ### Documentation Updates
 - Update `doc/requirements.md` or `impl/implementation-summary.md` when behavior changes.
 - Keep documentation factual, not speculative.
+- Testing documentation is in `tests/integration/` - update README.md, TESTING_SUMMARY.md, or QUICKSTART.md as needed.
 
 ## Cursor / Copilot Rules
 - No `.cursor/rules/` or `.cursorrules` found.
