@@ -143,11 +143,16 @@ cd tests/integration
 # Step 2: Run Vector tests
 ./vector_test_runner.sh
 
-# Step 3: Compare outputs
-python3 compare_outputs.py
+# Step 3: Set up Python environment with uv (first time only)
+uv venv .venv
+source .venv/bin/activate
+uv pip install requests
 
-# Step 4: Validate ES documents
-python3 validate_elasticsearch.py
+# Step 4: Compare outputs
+source .venv/bin/activate && python3 compare_outputs.py
+
+# Step 5: Validate ES documents
+source .venv/bin/activate && python3 validate_elasticsearch.py
 
 # Or run all at once:
 ./run_all_tests.sh

@@ -14,11 +14,13 @@ NC='\033[0m' # No Color
 cd "$(dirname "$0")"
 
 echo -e "${YELLOW}[1/5] Cleaning previous output...${NC}"
+mkdir -p output
+mkdir -p data/baseline
 rm -f output/logstash-baseline.json
 rm -f data/baseline/logstash-*.json
 
 echo -e "${YELLOW}[2/5] Starting Docker containers...${NC}"
-docker-compose up -d elasticsearch
+docker compose up -d elasticsearch
 echo "Waiting for Elasticsearch to be ready..."
 sleep 20
 
@@ -34,7 +36,7 @@ for i in {1..30}; do
 done
 
 echo -e "${YELLOW}[3/5] Running Logstash to generate baseline...${NC}"
-docker-compose up -d logstash
+docker compose up -d logstash
 echo "Waiting for Logstash to process logs..."
 sleep 30
 
@@ -51,7 +53,7 @@ if [ -f output/logstash-baseline.json ]; then
 else
     echo -e "${RED}✗ No baseline output found${NC}"
     echo "Checking Logstash logs:"
-    docker-compose logs logstash | tail -n 50
+    docker compose logs logstash | tail -n 50
 fi
 
 # Query Elasticsearch for comparison
@@ -70,5 +72,5 @@ echo "Output files:"
 echo "  - data/baseline/logstash-baseline.json (JSON lines)"
 echo "  - data/baseline/elasticsearch-docs.json (ES format)"
 echo ""
-echo "To stop containers: docker-compose down"
-echo "To view logs: docker-compose logs -f logstash"
+echo "To stop containers: docker compose down"
+echo "To view logs: docker compose logs -f logstash"

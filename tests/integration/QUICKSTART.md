@@ -85,6 +85,16 @@ cd tests/integration
 ./vector_test_runner.sh
 # Wait for completion (~15 seconds)
 
+# Set up Python environment with uv (first time only)
+uv venv .venv
+source .venv/bin/activate
+uv pip install requests
+
+# Set up Python environment with uv (first time only)
+uv venv .venv
+source .venv/bin/activate
+uv pip install requests
+
 # Compare outputs
 python3 compare_outputs.py
 # Shows field-by-field comparison
@@ -94,7 +104,7 @@ python3 validate_elasticsearch.py
 # Shows schema validation
 
 # Cleanup
-docker-compose down
+docker compose down
 ```
 **Expected:** 100% match between Logstash and Vector
 **Time:** ~2-3 minutes total
@@ -134,10 +144,10 @@ brew install vector  # macOS
 docker ps
 
 # View logs
-docker-compose logs
+docker compose logs
 
 # Restart
-docker-compose down && docker-compose up -d
+docker compose down && docker compose up -d
 ```
 
 ### "Python script fails"
@@ -145,8 +155,19 @@ docker-compose down && docker-compose up -d
 # Ensure Python 3 is installed
 python3 --version
 
-# Install requests if needed
-pip3 install requests
+# Install uv if not already installed
+# macOS: brew install uv
+# Or visit: https://github.com/astral-sh/uv
+
+# Set up Python environment with uv
+cd tests/integration
+uv venv .venv
+source .venv/bin/activate
+uv pip install requests
+
+# Always activate the virtual environment before running Python scripts
+source .venv/bin/activate
+python3 compare_outputs.py
 ```
 
 ## Expected Outcomes
@@ -192,13 +213,13 @@ pip3 install requests
 ### Quick Reference
 ```bash
 # Validate Vector config
-vector validate --config ../../impl/vector.yaml
+vector validate ../../impl/vector.yaml
 
 # Run specific test
 vector test --name "Unit: parse_core_fields - extracts product and layer" ../../impl/vector.yaml
 
 # Check Docker status
-docker-compose ps
+docker compose ps
 
 # View Elasticsearch indices
 curl http://localhost:9200/_cat/indices

@@ -57,11 +57,21 @@ echo ""
 echo -e "${BLUE}Note: To enable full baseline comparison:${NC}"
 echo "  1. Ensure Docker is running"
 echo "  2. Run: ./baseline_generator.sh"
-echo "  3. Run: ./compare_outputs.py"
+echo "  3. Set up Python environment: uv venv .venv && source .venv/bin/activate && uv pip install requests"
+echo "  4. Run: source .venv/bin/activate && python3 compare_outputs.py"
 echo ""
 echo "For now, checking if baseline comparison is possible..."
 if [ -f "data/baseline/logstash-baseline.json" ] && [ -f "data/baseline/vector-output.json" ]; then
     echo "Baseline files found! Running comparison..."
+    # Check if venv exists, create if not
+    if [ ! -d ".venv" ]; then
+        echo "Creating Python virtual environment with uv..."
+        uv venv .venv
+        source .venv/bin/activate
+        uv pip install requests
+    else
+        source .venv/bin/activate
+    fi
     run_test_step "Logstash vs Vector comparison" "python3 compare_outputs.py"
 elif [ -f "data/baseline/vector-output.json" ]; then
     echo "Vector output found, but no Logstash baseline for comparison"

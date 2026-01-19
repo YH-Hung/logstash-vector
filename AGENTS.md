@@ -52,6 +52,7 @@ There is no test runner, so there is no single-test command. Use one of the manu
 ### Imports / Dependencies
 - There are no language-level imports or dependencies in this repo.
 - Do not add new build tools or dependency manifests unless explicitly requested.
+- **Python dependencies**: Python scripts in `tests/integration/` use `uv` for dependency management. Always use `uv venv` and `uv pip install` rather than system `pip`.
 
 ### Naming Conventions
 - Match existing field names exactly (case-sensitive): e.g., `maskGroupId`, `MaskListNo`, `IsQueryPhase`.

@@ -16,6 +16,7 @@ The integration testing framework consists of:
 - Docker and Docker Compose (for Logstash baseline)
 - Vector CLI installed ([installation guide](https://vector.dev/docs/setup/installation/))
 - Python 3.7+ (for comparison script)
+- `uv` Python package manager ([installation guide](https://github.com/astral-sh/uv))
 
 ### Running Tests
 
@@ -33,7 +34,11 @@ The integration testing framework consists of:
 ./vector_test_runner.sh
 
 # Step 3: Compare outputs
-python3 compare_outputs.py
+# First time: Set up Python environment with uv
+uv venv .venv && source .venv/bin/activate && uv pip install requests
+
+# Run comparison (activate venv if not already active)
+source .venv/bin/activate && python3 compare_outputs.py
 
 # Or run all at once:
 ./run_all_tests.sh
@@ -89,7 +94,7 @@ Generates the Logstash baseline output for comparison.
 
 **Cleanup:**
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ### vector_test_runner.sh
@@ -121,6 +126,14 @@ Compares Logstash and Vector outputs field-by-field.
 
 **Usage:**
 ```bash
+# Set up Python environment (first time only)
+cd tests/integration
+uv venv .venv
+source .venv/bin/activate
+uv pip install requests
+
+# Run comparison (activate venv if not already active)
+source .venv/bin/activate
 python3 compare_outputs.py
 ```
 
@@ -252,10 +265,10 @@ Tests data type handling.
 ### Logstash baseline fails to generate
 ```bash
 # Check Docker status
-docker-compose ps
+docker compose ps
 
 # View Logstash logs
-docker-compose logs logstash
+docker compose logs logstash
 
 # Check Elasticsearch health
 curl http://localhost:9200/_cluster/health
@@ -264,13 +277,13 @@ curl http://localhost:9200/_cluster/health
 ### Vector test fails
 ```bash
 # Validate configuration
-vector validate --config ../../impl/vector.yaml
+vector validate ../../impl/vector.yaml
 
 # Check Vector version
 vector --version
 
 # Run with verbose logging
-vector --config vector-test.yaml --verbose
+vector -c vector-test.yaml --verbose
 ```
 
 ### Comparison shows mismatches
@@ -278,6 +291,23 @@ vector --config vector-test.yaml --verbose
 2. Review specific mismatches in comparison output
 3. Verify test data is identical between runs
 4. Check for timing-dependent fields (timestamps)
+
+### Python script fails or missing dependencies
+```bash
+# Ensure uv is installed
+# macOS: brew install uv
+# Or visit: https://github.com/astral-sh/uv
+
+# Set up Python environment
+cd tests/integration
+uv venv .venv
+source .venv/bin/activate
+uv pip install requests
+
+# Always activate venv before running Python scripts
+source .venv/bin/activate
+python3 compare_outputs.py
+```
 
 ## CI/CD Integration
 
