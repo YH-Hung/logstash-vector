@@ -59,6 +59,10 @@ def normalize_value(value: Any) -> Any:
         return value.strip()
     if isinstance(value, (int, float)):
         return value
+    # Handle arrays: Logstash creates arrays when multiple patterns match the same field
+    # Vector uses first-match-wins logic, so we compare against the first array element
+    if isinstance(value, list) and len(value) > 0:
+        return normalize_value(value[0])
     return str(value)
 
 

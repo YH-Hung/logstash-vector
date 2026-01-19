@@ -14,7 +14,7 @@
 [2026-01-17 11:00:01:040]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] maskGroupId-> MG002
 [2026-01-17 11:00:01:050]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] reticleId="MG003">
 [2026-01-17 11:00:01:060]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] maskLotId-> LOT002
-[2026-01-17 11:00:01:070]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] MASKLOTID = 'LOT003'
+[2026-01-17 11:00:01:070]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] MASKLOTID = 'LOT002'
 [2026-01-17 11:00:01:075]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] Querying defect database for LOT002
 [2026-01-17 11:00:01:080]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] CMMSSrv::QueryLot() END ***
-[2026-01-17 11:00:01:100]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] Rep_QueryLot {"gTxId":"b3c4d5e6-f7a8-9012-3456-7890abcdef01", "mask_group_id":"MG002", "mask_lot_id":"LOT003", "product":"PRODX", "layer":"LAYERX", "status":"SUCCESS", "responseTime":"2026-01-17T11:00:01.100Z", "elapsedMs":80, "recordCount":3, "defectCount":2, "historyRecords":47, "lastInspection":"2026-01-16T14:30:00Z", "inspectionResult":"CONDITIONAL_PASS", "defectDetails":"[2 minor scratches detected]", "nextScheduledInspection":"2026-01-20T09:00:00Z", "usageCount":156, "remainingLifeCycles":844}
+[2026-01-17 11:00:01:100]   [b3c4d5e6-f7a8-9012-3456-7890abcdef01] Rep_QueryLot {"gTxId":"b3c4d5e6-f7a8-9012-3456-7890abcdef01", "mask_group_id":"MG002", "mask_lot_id":"LOT002", "product":"PRODX", "layer":"LAYERX", "status":"SUCCESS", "responseTime":"2026-01-17T11:00:01.100Z", "elapsedMs":80, "recordCount":3, "defectCount":2, "historyRecords":47, "lastInspection":"2026-01-16T14:30:00Z", "inspectionResult":"CONDITIONAL_PASS", "defectDetails":"[2 minor scratches detected]", "nextScheduledInspection":"2026-01-20T09:00:00Z", "usageCount":156, "remainingLifeCycles":844}
