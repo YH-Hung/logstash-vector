@@ -1,0 +1,4 @@
+level,input_events,output_events,duration_sec,throughput_eps
+small,200,200,2.041,97.99
+medium,2000,2000,2.044,978.47
+large,20000,20000,2.055,9732.36

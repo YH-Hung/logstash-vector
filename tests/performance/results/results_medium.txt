@@ -1,0 +1,10 @@
+Test Level: medium
+Timestamp: 2026-01-20T15:14:53Z
+---
+Input Events: 2000
+Output Events: 2000
+Duration: 2.044s
+Throughput: 978.47 events/sec
+---
+Input File: /Users/yinghanhung/Projects/AI/logstash-vector/tests/performance/data/load_test_medium.log
+Output File: /Users/yinghanhung/Projects/AI/logstash-vector/tests/performance/data/output_medium.json

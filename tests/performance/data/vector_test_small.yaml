@@ -1,0 +1,120 @@
+data_dir: /Users/yinghanhung/Projects/AI/logstash-vector/tests/performance/data/vector_data
+
+sources:
+  test_input:
+    type: file
+    include:
+      - /Users/yinghanhung/Projects/AI/logstash-vector/tests/performance/data/load_test_small.log
+    read_from: beginning
+    file_key: path
+
+transforms:
+  enrich_static:
+    type: remap
+    inputs:
+      - test_input
+    source: |
+      .system = "legendary"
+      .type = "ap_log"
+
+  parse_filename:
+    type: remap
+    inputs:
+      - enrich_static
+    source: |
+      if !is_null(.path) && is_string(.path) {
+        filename_parsed, _ = parse_grok(.path, "%{GREEDYDATA}/%{NOTSPACE:filename}")
+        if filename_parsed != null && filename_parsed.filename != null {
+          .filename = filename_parsed.filename
+        }
+      }
+
+  parse_core_fields:
+    type: remap
+    inputs:
+      - parse_filename
+    source: |
+      if !is_null(.message) && is_string(.message) {
+        message_value = .message
+        parsed, _ = parse_grok(message_value, s'.*(?i)"product":"%{NOTSPACE:product}"')
+        if parsed != null && parsed.product != null {
+          .product = parsed.product
+        }
+        parsed, _ = parse_grok(message_value, s'.*(?i)"layer":"%{NOTSPACE:layer}"')
+        if parsed != null && parsed.layer != null {
+          .layer = parsed.layer
+        }
+      }
+
+  parse_mask_group_id:
+    type: remap
+    inputs:
+      - parse_core_fields
+    source: |
+      if !is_null(.message) && is_string(.message) {
+        message_value = .message
+        if is_null(.maskGroupId) {
+          parsed, _ = parse_grok(message_value, s'.*(?i)"mask_?group_?id":"%{NOTSPACE:maskGroupId}"')
+          if parsed != null && parsed.maskGroupId != null {
+            .maskGroupId = parsed.maskGroupId
+          }
+        }
+        if is_null(.maskGroupId) {
+          parsed, _ = parse_grok(message_value, ".*(?i)maskGroupId-> %{NOTSPACE:maskGroupId}")
+          if parsed != null && parsed.maskGroupId != null {
+            .maskGroupId = parsed.maskGroupId
+          }
+        }
+      }
+
+  parse_other_fields:
+    type: remap
+    inputs:
+      - parse_mask_group_id
+    source: |
+      if !is_null(.message) && is_string(.message) {
+        message_value = .message
+        parsed, _ = parse_grok(message_value, "MaskListNo=%{NUMBER:MaskListNo}")
+        if parsed != null && parsed.MaskListNo != null {
+          .MaskListNo = to_int!(parsed.MaskListNo)
+        }
+        parsed, _ = parse_grok(message_value, s'"rqstType":"%{NOTSPACE:rqstType}"')
+        if parsed != null && parsed.rqstType != null {
+          .rqstType = parsed.rqstType
+        }
+        parsed, _ = parse_grok(message_value, s'"IsQueryPhase":"%{NOTSPACE:IsQueryPhase}"')
+        if parsed != null && parsed.IsQueryPhase != null {
+          .IsQueryPhase = parsed.IsQueryPhase
+        }
+      }
+
+  derive_and_cleanup:
+    type: remap
+    inputs:
+      - parse_other_fields
+    source: |
+      MGtag = if is_null(.maskGroupId) { "null" } else { "set" }
+      Ptag = if is_null(.product) { "null" } else { "set" }
+      Ltag = if is_null(.layer) { "null" } else { "set" }
+      if MGtag == "null" && Ptag != "null" && Ltag != "null" {
+        .maskGroupId = string!(.product) + "-" + string!(.layer)
+      }
+      if !is_null(.IsQueryPhase) {
+        isQueryPhase = string!(.IsQueryPhase)
+        rqstType = if !is_null(.rqstType) { string!(.rqstType) } else { "" }
+        if contains(isQueryPhase, "Y") || contains(rqstType, "PHASE") {
+          del(.maskLotId)
+          del(.maskGroupId)
+          del(.product)
+          del(.layer)
+        }
+      }
+
+sinks:
+  test_output:
+    type: file
+    inputs:
+      - derive_and_cleanup
+    path: /Users/yinghanhung/Projects/AI/logstash-vector/tests/performance/data/output_small.json
+    encoding:
+      codec: json

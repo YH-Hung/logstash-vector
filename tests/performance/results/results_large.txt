@@ -1,0 +1,10 @@
+Test Level: large
+Timestamp: 2026-01-20T15:14:55Z
+---
+Input Events: 20000
+Output Events: 20000
+Duration: 2.055s
+Throughput: 9732.36 events/sec
+---
+Input File: /Users/yinghanhung/Projects/AI/logstash-vector/tests/performance/data/load_test_large.log
+Output File: /Users/yinghanhung/Projects/AI/logstash-vector/tests/performance/data/output_large.json

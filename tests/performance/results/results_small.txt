@@ -1,0 +1,10 @@
+Test Level: small
+Timestamp: 2026-01-20T15:14:51Z
+---
+Input Events: 200
+Output Events: 200
+Duration: 2.041s
+Throughput: 97.99 events/sec
+---
+Input File: /Users/yinghanhung/Projects/AI/logstash-vector/tests/performance/data/load_test_small.log
+Output File: /Users/yinghanhung/Projects/AI/logstash-vector/tests/performance/data/output_small.json
