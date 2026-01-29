@@ -57,6 +57,14 @@ python3 compare_outputs.py  # Compare outputs
 
 ## Quick Start Commands
 
+### 0. Local Testing with Console Output
+```bash
+cd ../../  # Go to project root
+vector --config impl/vector.yaml --require-healthy false
+```
+**Expected:** JSON events output to stdout (built-in console sink)
+**Use case:** Quick local debugging without Elasticsearch
+
 ### 1. Run Vector Unit Tests Only
 ```bash
 cd ../../  # Go to project root
@@ -236,6 +244,6 @@ curl http://localhost:9200/_cat/indices
 
 **Status**: Integration testing framework is complete and ready for use!
 
-**Last Updated**: 2026-01-19
+**Last Updated**: 2026-01-29
 
 **Version**: 1.1

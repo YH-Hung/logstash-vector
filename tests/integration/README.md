@@ -20,6 +20,14 @@ The integration testing framework consists of:
 
 ### Running Tests
 
+**Option 0: Local Console Output (No Elasticsearch needed)**
+```bash
+# The Vector config includes a built-in console sink for local testing
+cd ../..  # Go to project root
+vector --config impl/vector.yaml --require-healthy false
+# JSON events will be output to stdout
+```
+
 **Option 1: Quick Test (Vector only, no baseline comparison)**
 ```bash
 ./run_all_tests.sh

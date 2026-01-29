@@ -82,26 +82,15 @@ vector validate impl/vector.yaml
 
 ## Testing Against Sample Data
 
-### Step 2: Prepare Test Configuration
+### Step 2: Console Sink for Local Testing
 
-Create a temporary test configuration that outputs to console instead of Elasticsearch:
+The Vector configuration includes a built-in console sink (`console_output`) that outputs JSON to stdout, making local testing easy without needing Elasticsearch.
 
+Both sinks (`elasticsearch_output` and `console_output`) receive data from the same transform pipeline. When running locally, you'll see processed events on stdout while Elasticsearch output may fail (which is fine for local testing).
+
+To test with only console output (no Elasticsearch errors):
 ```bash
-# Create a test config file
-cp impl/vector.yaml impl/test-vector.yaml
-```
-
-Edit `impl/test-vector.yaml` and modify the sinks section:
-
-```yaml
-# Replace the elasticsearch_output sink with:
-sinks:
-  console_output:
-    type: console
-    inputs:
-      - parse_fields
-    encoding:
-      codec: json
+vector --config impl/vector.yaml --require-healthy false
 ```
 
 ### Step 3: Modify File Source for Testing

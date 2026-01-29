@@ -98,6 +98,14 @@ sinks:
     healthcheck:
       enabled: false
 
+  # Console sink for local testing - outputs to stdout
+  console_output:
+    type: console
+    inputs:
+      - derive_and_cleanup
+    encoding:
+      codec: json
+
 tests:
   # ============================================================================
   # Step 1: enrich_static tests

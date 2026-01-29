@@ -33,6 +33,15 @@ cd tests/integration
 .
 ├── impl/
 │   ├── vector.yaml              # Production Vector configuration (35 unit tests)
+│   ├── vrl/                     # Externalized VRL parsing logic
+│   │   ├── 01_enrich_static.vrl
+│   │   ├── 02_parse_filename.vrl
+│   │   ├── 03_parse_core_fields.vrl
+│   │   ├── 04_parse_mask_group_id.vrl
+│   │   ├── 05_parse_action.vrl
+│   │   ├── 06_parse_mask_lot_id.vrl
+│   │   ├── 07_parse_other_fields.vrl
+│   │   └── 08_derive_and_cleanup.vrl
 │   └── implementation-summary.md # Implementation status and summary
 ├── doc/
 │   ├── requirements.md          # Detailed migration requirements
@@ -87,7 +96,8 @@ cd tests/integration
 
 ### Vector Configuration
 - **Location**: `impl/vector.yaml`
-- **Components**: File source, remap transforms, Elasticsearch sink
+- **VRL Logic**: Externalized in `impl/vrl/` (8 files for modular parsing)
+- **Components**: File source, remap transforms, Elasticsearch sink, console sink
 - **Tests**: 35 embedded unit tests
 - **Status**: Production-ready
 
@@ -97,8 +107,8 @@ cd tests/integration
 - **Multiline**: Aggregates TRACE events starting with `before SysUuid::set()`
 
 ### Output
-- **Destination**: Elasticsearch
-- **Endpoint**: `elasticsearch-fz1.engmon.svc.cluster.local:9200`
+- **Production**: Elasticsearch sink (`elasticsearch-fz1.engmon.svc.cluster.local:9200`)
+- **Local Testing**: Console sink (outputs JSON to stdout)
 - **Index Pattern**: `{{ POD_NAMESPACE }}-%Y.%m.%d`
 - **Format**: Logstash format
 
@@ -150,6 +160,6 @@ cd tests/integration
 
 ---
 
-**Last Updated**: 2026-01-19  
+**Last Updated**: 2026-01-29  
 **Version**: 1.0  
 **Status**: ✅ Functionally Complete, Ready for Production Validation

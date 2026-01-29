@@ -2,7 +2,7 @@
 
 ## Status: ✅ Functionally Complete and Tested
 
-**Last Updated**: 2026-01-17
+**Last Updated**: 2026-01-29
 
 ## Scope
 
@@ -40,9 +40,15 @@ Field extraction summary:
 
 ## Output
 
+### Production Sink (Elasticsearch)
 - Elasticsearch sink points to `http://elasticsearch-fz1.engmon.svc.cluster.local:9200`.
 - `logstash_format: true` with `logstash_date_format: "%Y.%m.%d"` and `bulk.index: "{{ POD_NAMESPACE }}"`.
 - Buffering matches required flush interval and chunk size with retry forever behavior.
+
+### Local Testing Sink (Console)
+- Console sink outputs JSON-encoded events to stdout.
+- Useful for local development and debugging without Elasticsearch dependency.
+- Run with `vector --config impl/vector.yaml --require-healthy false` for local testing.
 
 ## Testing
 
