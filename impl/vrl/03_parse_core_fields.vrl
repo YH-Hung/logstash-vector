@@ -1,0 +1,15 @@
+# Step 3: Extract product and layer from message
+# Core business fields for log categorization
+
+if !is_null(.message) && is_string(.message) {
+  message_value = .message
+  parsed, _ = parse_grok(message_value, s'.*(?i)"product":"%{NOTSPACE:product}"')
+  if parsed != null && parsed.product != null {
+    .product = parsed.product
+  }
+
+  parsed, _ = parse_grok(message_value, s'.*(?i)"layer":"%{NOTSPACE:layer}"')
+  if parsed != null && parsed.layer != null {
+    .layer = parsed.layer
+  }
+}

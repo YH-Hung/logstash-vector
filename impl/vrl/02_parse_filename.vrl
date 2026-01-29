@@ -1,0 +1,9 @@
+# Step 2: Extract filename from path
+# Uses grok pattern to parse filename from full file path
+
+if !is_null(.path) && is_string(.path) {
+  filename_parsed, _ = parse_grok(.path, "%{GREEDYDATA}/%{NOTSPACE:filename}")
+  if filename_parsed != null && filename_parsed.filename != null {
+    .filename = filename_parsed.filename
+  }
+}

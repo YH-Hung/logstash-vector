@@ -76,6 +76,8 @@ yq eval '
 # Replace placeholders with actual paths
 sed -i.bak "s|__PROJECT_ROOT__|$PROJECT_ROOT|g" output/vector-test.yaml
 sed -i.bak "s|__SCRIPT_DIR__|$SCRIPT_DIR|g" output/vector-test.yaml
+# Replace VRL file paths with absolute paths for test execution
+sed -i.bak "s|file: impl/vrl/|file: $PROJECT_ROOT/impl/vrl/|g" output/vector-test.yaml
 rm -f output/vector-test.yaml.bak
 
 echo -e "${GREEN}✓ Test configuration created from impl/vector.yaml${NC}"

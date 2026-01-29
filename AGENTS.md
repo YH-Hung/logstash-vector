@@ -4,7 +4,8 @@
 This repository contains configuration, documentation, and sample data for a Logstash → Vector migration. There is no compiled application or conventional test suite; most work involves editing YAML, VRL, and documentation.
 
 ## Repository Layout
-- `impl/vector.yaml`: Primary Vector configuration and VRL transform logic (includes 35 unit tests).
+- `impl/vector.yaml`: Primary Vector configuration (includes 35 unit tests).
+- `impl/vrl/`: Externalized VRL transform files (8 files, one per transform step).
 - `doc/requirements.md`: Detailed migration requirements and parsing rules.
 - `doc/todo.md`: Task checklist and validation notes.
 - `doc/testing-procedures.md`: Testing procedures and validation guidelines.

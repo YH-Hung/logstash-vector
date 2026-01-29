@@ -55,13 +55,15 @@ run_test_step() {
 # Main test sequence
 echo -e "${YELLOW}Phase 1: Vector Built-in Unit Tests${NC}"
 echo "------------------------------------"
-run_test_step "Vector unit tests" "vector test '$PROJECT_ROOT/impl/vector.yaml'"
+# Run from project root so VRL file paths resolve correctly
+run_test_step "Vector unit tests" "cd '$PROJECT_ROOT' && vector test impl/vector.yaml"
 echo ""
 
 echo -e "${YELLOW}Phase 2: Vector Configuration Validation${NC}"
 echo "-----------------------------------------"
 echo "Validating Vector configuration..."
-run_test_step "Vector config validation" "vector validate --no-environment '$PROJECT_ROOT/impl/vector.yaml'"
+# Run from project root so VRL file paths resolve correctly
+run_test_step "Vector config validation" "cd '$PROJECT_ROOT' && vector validate --no-environment impl/vector.yaml"
 echo ""
 
 echo -e "${YELLOW}Phase 3: Optional Logstash Baseline Comparison${NC}"

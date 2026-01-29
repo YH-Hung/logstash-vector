@@ -1,0 +1,41 @@
+# Step 4: Extract maskGroupId with multiple fallback patterns
+# 5 different patterns tried in order of priority
+
+if !is_null(.message) && is_string(.message) {
+  message_value = .message
+
+  if is_null(.maskGroupId) {
+    parsed, _ = parse_grok(message_value, s'.*(?i)"mask_?group_?id":"%{NOTSPACE:maskGroupId}"')
+    if parsed != null && parsed.maskGroupId != null {
+      .maskGroupId = parsed.maskGroupId
+    }
+  }
+
+  if is_null(.maskGroupId) {
+    parsed, _ = parse_grok(message_value, ".*(?i)maskGroupId-> %{NOTSPACE:maskGroupId}")
+    if parsed != null && parsed.maskGroupId != null {
+      .maskGroupId = parsed.maskGroupId
+    }
+  }
+
+  if is_null(.maskGroupId) {
+    parsed, _ = parse_grok(message_value, s'.*(?i)reticleId="%{NOTSPACE:maskGroupId}">')
+    if parsed != null && parsed.maskGroupId != null {
+      .maskGroupId = parsed.maskGroupId
+    }
+  }
+
+  if is_null(.maskGroupId) {
+    parsed, _ = parse_grok(message_value, s'.*(?i)"reticle_?id":"%{NOTSPACE:maskGroupId}"')
+    if parsed != null && parsed.maskGroupId != null {
+      .maskGroupId = parsed.maskGroupId
+    }
+  }
+
+  if is_null(.maskGroupId) {
+    parsed, _ = parse_grok(message_value, ".*(?i)reticlelotid -> %{NOTSPACE:maskGroupId}")
+    if parsed != null && parsed.maskGroupId != null {
+      .maskGroupId = parsed.maskGroupId
+    }
+  }
+}

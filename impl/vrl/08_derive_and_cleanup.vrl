@@ -1,0 +1,51 @@
+# Step 8: Derive fields, type conversions, and query phase cleanup
+# - Set tag fields for null tracking
+# - Derive maskGroupId from product-layer if missing
+# - Convert MaskListNo to integer
+# - Remove sensitive fields during query phase
+
+if is_null(.maskGroupId) {
+  .MGtag = "null"
+}
+
+if is_null(.product) {
+  .Ptag = "null"
+}
+
+if is_null(.layer) {
+  .Ltag = "null"
+}
+
+if .MGtag == "null" && .Ptag != "null" && .Ltag != "null" {
+  product_str, _ = to_string(.product)
+  layer_str, _ = to_string(.layer)
+  if product_str != null && layer_str != null {
+    .maskGroupId = product_str + "-" + layer_str
+  }
+}
+
+if !is_null(.MaskListNo) {
+  .MaskListNo = to_int!(.MaskListNo)
+}
+
+query_phase = false
+if !is_null(.IsQueryPhase) {
+  is_query_phase_str, _ = to_string(.IsQueryPhase)
+  if is_query_phase_str != null && contains(is_query_phase_str, "Y") {
+    query_phase = true
+  }
+}
+
+if !query_phase && !is_null(.rqstType) {
+  rqst_type_str, _ = to_string(.rqstType)
+  if rqst_type_str != null && contains(rqst_type_str, "PHASE") {
+    query_phase = true
+  }
+}
+
+if query_phase {
+  del(.maskLotId)
+  del(.maskGroupId)
+  del(.product)
+  del(.layer)
+}

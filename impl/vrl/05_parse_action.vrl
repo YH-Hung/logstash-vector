@@ -1,0 +1,23 @@
+# Step 5: Extract Action field (may also extract maskGroupId)
+# 2 patterns: Action with maskGroupId, Action only
+
+if !is_null(.message) && is_string(.message) {
+  message_value = .message
+
+  if is_null(.Action) {
+    parsed, _ = parse_grok(message_value, s'.*(?i)"Action":"%{NOTSPACE:Action}:%{NOTSPACE:maskGroupId}"')
+    if parsed != null && parsed.Action != null {
+      .Action = parsed.Action
+      if is_null(.maskGroupId) && parsed.maskGroupId != null {
+        .maskGroupId = parsed.maskGroupId
+      }
+    }
+  }
+
+  if is_null(.Action) {
+    parsed, _ = parse_grok(message_value, s'.*(?i)"Action":"%{NOTSPACE:Action}"')
+    if parsed != null && parsed.Action != null {
+      .Action = parsed.Action
+    }
+  }
+}

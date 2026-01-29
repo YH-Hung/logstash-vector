@@ -15,6 +15,17 @@ Migrate the Logstash pipeline that processes `ap_log` file inputs from `/app/log
 
 ## Parsing and Field Extraction
 
+VRL parsing logic is externalized into separate files in `impl/vrl/`:
+- `01_enrich_static.vrl` - Static field enrichment (system, type)
+- `02_parse_filename.vrl` - Filename extraction from path
+- `03_parse_core_fields.vrl` - Product and layer extraction
+- `04_parse_mask_group_id.vrl` - MaskGroupId with 5 fallback patterns
+- `05_parse_action.vrl` - Action field with 2 fallback patterns
+- `06_parse_mask_lot_id.vrl` - MaskLotId with 4 fallback patterns
+- `07_parse_other_fields.vrl` - Remaining fields extraction
+- `08_derive_and_cleanup.vrl` - Field derivation and query phase cleanup
+
+Field extraction summary:
 - Filename is parsed from `.path` using `%{GREEDYDATA}/%{NOTSPACE:filename}`.
 - Primary fields: `product`, `layer`.
 - Complex fields: `maskGroupId` (5 fallbacks), `Action` (2 fallbacks), `maskLotId` (4 fallbacks).

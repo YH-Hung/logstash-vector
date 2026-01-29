@@ -19,255 +19,56 @@ transforms:
     type: remap
     inputs:
       - ap_log_files
-    source: |
-      .system = "legendary"
-      .type = "ap_log"
+    file: impl/vrl/01_enrich_static.vrl
 
   # Step 2: Extract filename from path
   parse_filename:
     type: remap
     inputs:
       - enrich_static
-    source: |
-      if !is_null(.path) && is_string(.path) {
-        filename_parsed, _ = parse_grok(.path, "%{GREEDYDATA}/%{NOTSPACE:filename}")
-        if filename_parsed != null && filename_parsed.filename != null {
-          .filename = filename_parsed.filename
-        }
-      }
+    file: impl/vrl/02_parse_filename.vrl
 
   # Step 3: Extract product and layer from message
   parse_core_fields:
     type: remap
     inputs:
       - parse_filename
-    source: |
-      if !is_null(.message) && is_string(.message) {
-        message_value = .message
-        parsed, _ = parse_grok(message_value, s'.*(?i)"product":"%{NOTSPACE:product}"')
-        if parsed != null && parsed.product != null {
-          .product = parsed.product
-        }
-
-        parsed, _ = parse_grok(message_value, s'.*(?i)"layer":"%{NOTSPACE:layer}"')
-        if parsed != null && parsed.layer != null {
-          .layer = parsed.layer
-        }
-      }
+    file: impl/vrl/03_parse_core_fields.vrl
 
   # Step 4: Extract maskGroupId with multiple fallback patterns
   parse_mask_group_id:
     type: remap
     inputs:
       - parse_core_fields
-    source: |
-      if !is_null(.message) && is_string(.message) {
-        message_value = .message
-
-        if is_null(.maskGroupId) {
-          parsed, _ = parse_grok(message_value, s'.*(?i)"mask_?group_?id":"%{NOTSPACE:maskGroupId}"')
-          if parsed != null && parsed.maskGroupId != null {
-            .maskGroupId = parsed.maskGroupId
-          }
-        }
-
-        if is_null(.maskGroupId) {
-          parsed, _ = parse_grok(message_value, ".*(?i)maskGroupId-> %{NOTSPACE:maskGroupId}")
-          if parsed != null && parsed.maskGroupId != null {
-            .maskGroupId = parsed.maskGroupId
-          }
-        }
-
-        if is_null(.maskGroupId) {
-          parsed, _ = parse_grok(message_value, s'.*(?i)reticleId="%{NOTSPACE:maskGroupId}">')
-          if parsed != null && parsed.maskGroupId != null {
-            .maskGroupId = parsed.maskGroupId
-          }
-        }
-
-        if is_null(.maskGroupId) {
-          parsed, _ = parse_grok(message_value, s'.*(?i)"reticle_?id":"%{NOTSPACE:maskGroupId}"')
-          if parsed != null && parsed.maskGroupId != null {
-            .maskGroupId = parsed.maskGroupId
-          }
-        }
-
-        if is_null(.maskGroupId) {
-          parsed, _ = parse_grok(message_value, ".*(?i)reticlelotid -> %{NOTSPACE:maskGroupId}")
-          if parsed != null && parsed.maskGroupId != null {
-            .maskGroupId = parsed.maskGroupId
-          }
-        }
-      }
+    file: impl/vrl/04_parse_mask_group_id.vrl
 
   # Step 5: Extract Action field (may also extract maskGroupId)
   parse_action:
     type: remap
     inputs:
       - parse_mask_group_id
-    source: |
-      if !is_null(.message) && is_string(.message) {
-        message_value = .message
-
-        if is_null(.Action) {
-          parsed, _ = parse_grok(message_value, s'.*(?i)"Action":"%{NOTSPACE:Action}:%{NOTSPACE:maskGroupId}"')
-          if parsed != null && parsed.Action != null {
-            .Action = parsed.Action
-            if is_null(.maskGroupId) && parsed.maskGroupId != null {
-              .maskGroupId = parsed.maskGroupId
-            }
-          }
-        }
-
-        if is_null(.Action) {
-          parsed, _ = parse_grok(message_value, s'.*(?i)"Action":"%{NOTSPACE:Action}"')
-          if parsed != null && parsed.Action != null {
-            .Action = parsed.Action
-          }
-        }
-      }
+    file: impl/vrl/05_parse_action.vrl
 
   # Step 6: Extract maskLotId with multiple fallback patterns
   parse_mask_lot_id:
     type: remap
     inputs:
       - parse_action
-    source: |
-      if !is_null(.message) && is_string(.message) {
-        message_value = .message
-
-        if is_null(.maskLotId) {
-          parsed, _ = parse_grok(message_value, s'.*(?i)"mask_?lot_?id":"%{NOTSPACE:maskLotId}"')
-          if parsed != null && parsed.maskLotId != null {
-            .maskLotId = parsed.maskLotId
-          }
-        }
-
-        if is_null(.maskLotId) {
-          parsed, _ = parse_grok(message_value, ".*(?i)maskLotId->%{NOTSPACE:maskLotId}")
-          if parsed != null && parsed.maskLotId != null {
-            .maskLotId = parsed.maskLotId
-          }
-        }
-
-        if is_null(.maskLotId) {
-          parsed, _ = parse_grok(message_value, ".*(?i)maskLotId-> %{NOTSPACE:maskLotId}")
-          if parsed != null && parsed.maskLotId != null {
-            .maskLotId = parsed.maskLotId
-          }
-        }
-
-        if is_null(.maskLotId) {
-          parsed, _ = parse_grok(message_value, ".*(?i)maskLotId = '%{NOTSPACE:maskLotId}'")
-          if parsed != null && parsed.maskLotId != null {
-            .maskLotId = parsed.maskLotId
-          }
-        }
-      }
+    file: impl/vrl/06_parse_mask_lot_id.vrl
 
   # Step 7: Extract remaining fields (MaskListNo, rqstType, IsQueryPhase, etc.)
   parse_other_fields:
     type: remap
     inputs:
       - parse_mask_lot_id
-    source: |
-      if !is_null(.message) && is_string(.message) {
-        message_value = .message
-
-        if is_null(.MaskListNo) {
-          parsed, _ = parse_grok(message_value, "MaskListNo=%{NUMBER:MaskListNo}")
-          if parsed != null && parsed.MaskListNo != null {
-            .MaskListNo = parsed.MaskListNo
-          }
-        }
-
-        if is_null(.rqstType) {
-          parsed, _ = parse_grok(message_value, s'"rqstType":"%{NOTSPACE:rqstType}"')
-          if parsed != null && parsed.rqstType != null {
-            .rqstType = parsed.rqstType
-          }
-        }
-
-        if is_null(.IsQueryPhase) {
-          parsed, _ = parse_grok(message_value, s'"IsQueryPhase":"%{NOTSPACE:IsQueryPhase}"')
-          if parsed != null && parsed.IsQueryPhase != null {
-            .IsQueryPhase = parsed.IsQueryPhase
-          }
-        }
-
-        if is_null(.srvObjCategory) {
-          parsed, _ = parse_grok(message_value, s'"srvObjCategory":"%{NOTSPACE:srvObjCategory}"')
-          if parsed != null && parsed.srvObjCategory != null {
-            .srvObjCategory = parsed.srvObjCategory
-          }
-        }
-
-        if is_null(.srvMethod) {
-          parsed, _ = parse_grok(message_value, s'"srvMethod":"%{NOTSPACE:srvMethod}"')
-          if parsed != null && parsed.srvMethod != null {
-            .srvMethod = parsed.srvMethod
-          }
-        }
-
-        if is_null(.Purge_Tool) {
-          parsed, _ = parse_grok(message_value, s'"purge_tool":"%{NOTSPACE:Purge_Tool}"')
-          if parsed != null && parsed.Purge_Tool != null {
-            .Purge_Tool = parsed.Purge_Tool
-          }
-        }
-      }
+    file: impl/vrl/07_parse_other_fields.vrl
 
   # Step 8: Derive fields, type conversions, and query phase cleanup
   derive_and_cleanup:
     type: remap
     inputs:
       - parse_other_fields
-    source: |
-      if is_null(.maskGroupId) {
-        .MGtag = "null"
-      }
-
-      if is_null(.product) {
-        .Ptag = "null"
-      }
-
-      if is_null(.layer) {
-        .Ltag = "null"
-      }
-
-      if .MGtag == "null" && .Ptag != "null" && .Ltag != "null" {
-        product_str, _ = to_string(.product)
-        layer_str, _ = to_string(.layer)
-        if product_str != null && layer_str != null {
-          .maskGroupId = product_str + "-" + layer_str
-        }
-      }
-
-      if !is_null(.MaskListNo) {
-        .MaskListNo = to_int!(.MaskListNo)
-      }
-
-      query_phase = false
-      if !is_null(.IsQueryPhase) {
-        is_query_phase_str, _ = to_string(.IsQueryPhase)
-        if is_query_phase_str != null && contains(is_query_phase_str, "Y") {
-          query_phase = true
-        }
-      }
-
-      if !query_phase && !is_null(.rqstType) {
-        rqst_type_str, _ = to_string(.rqstType)
-        if rqst_type_str != null && contains(rqst_type_str, "PHASE") {
-          query_phase = true
-        }
-      }
-
-      if query_phase {
-        del(.maskLotId)
-        del(.maskGroupId)
-        del(.product)
-        del(.layer)
-      }
+    file: impl/vrl/08_derive_and_cleanup.vrl
 
 sinks:
   elasticsearch_output:

@@ -1,0 +1,48 @@
+# Step 7: Extract remaining fields
+# MaskListNo, rqstType, IsQueryPhase, srvObjCategory, srvMethod, Purge_Tool
+
+if !is_null(.message) && is_string(.message) {
+  message_value = .message
+
+  if is_null(.MaskListNo) {
+    parsed, _ = parse_grok(message_value, "MaskListNo=%{NUMBER:MaskListNo}")
+    if parsed != null && parsed.MaskListNo != null {
+      .MaskListNo = parsed.MaskListNo
+    }
+  }
+
+  if is_null(.rqstType) {
+    parsed, _ = parse_grok(message_value, s'"rqstType":"%{NOTSPACE:rqstType}"')
+    if parsed != null && parsed.rqstType != null {
+      .rqstType = parsed.rqstType
+    }
+  }
+
+  if is_null(.IsQueryPhase) {
+    parsed, _ = parse_grok(message_value, s'"IsQueryPhase":"%{NOTSPACE:IsQueryPhase}"')
+    if parsed != null && parsed.IsQueryPhase != null {
+      .IsQueryPhase = parsed.IsQueryPhase
+    }
+  }
+
+  if is_null(.srvObjCategory) {
+    parsed, _ = parse_grok(message_value, s'"srvObjCategory":"%{NOTSPACE:srvObjCategory}"')
+    if parsed != null && parsed.srvObjCategory != null {
+      .srvObjCategory = parsed.srvObjCategory
+    }
+  }
+
+  if is_null(.srvMethod) {
+    parsed, _ = parse_grok(message_value, s'"srvMethod":"%{NOTSPACE:srvMethod}"')
+    if parsed != null && parsed.srvMethod != null {
+      .srvMethod = parsed.srvMethod
+    }
+  }
+
+  if is_null(.Purge_Tool) {
+    parsed, _ = parse_grok(message_value, s'"purge_tool":"%{NOTSPACE:Purge_Tool}"')
+    if parsed != null && parsed.Purge_Tool != null {
+      .Purge_Tool = parsed.Purge_Tool
+    }
+  }
+}

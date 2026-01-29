@@ -1,0 +1,5 @@
+# Step 1: Static field enrichment
+# Sets system and type fields for all events
+
+.system = "legendary"
+.type = "ap_log"
