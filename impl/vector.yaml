@@ -610,6 +610,58 @@ tests:
               assert_eq!(.Ptag, "null")
               assert_eq!(.Ltag, "null")
 
+  - name: "Unit: derive_and_cleanup - renames timestamp to @timestamp with Asia/Taipei timezone"
+    inputs:
+      - insert_at: derive_and_cleanup
+        type: log
+        log_fields:
+          message: "test message"
+    outputs:
+      - extract_from: derive_and_cleanup
+        conditions:
+          - type: vrl
+            source: |
+              assert!(!exists(.timestamp), "original .timestamp field should be removed")
+              assert!(exists(."@timestamp"), "@timestamp field should exist")
+              ts_str = to_string!(."@timestamp")
+              assert!(contains(ts_str, "+08:00"), "@timestamp should have Asia/Taipei offset (+08:00)")
+
+  - name: "Unit: derive_and_cleanup - timestamp rename coexists with field derivation"
+    inputs:
+      - insert_at: derive_and_cleanup
+        type: log
+        log_fields:
+          product: "TMEF78"
+          layer: "376A-M001"
+    outputs:
+      - extract_from: derive_and_cleanup
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.maskGroupId, "TMEF78-376A-M001")
+              assert!(!exists(.timestamp))
+              assert!(exists(."@timestamp"))
+              ts_str = to_string!(."@timestamp")
+              assert!(contains(ts_str, "+08:00"))
+
+  - name: "Unit: derive_and_cleanup - query phase cleanup coexists with timestamp rename"
+    inputs:
+      - insert_at: derive_and_cleanup
+        type: log
+        log_fields:
+          maskGroupId: "MG001"
+          IsQueryPhase: "Y"
+    outputs:
+      - extract_from: derive_and_cleanup
+        conditions:
+          - type: vrl
+            source: |
+              assert!(!exists(.maskGroupId))
+              assert!(!exists(.timestamp))
+              assert!(exists(."@timestamp"))
+              ts_str = to_string!(."@timestamp")
+              assert!(contains(ts_str, "+08:00"))
+
   # ============================================================================
   # Integration tests (full pipeline)
   # ============================================================================
@@ -640,6 +692,10 @@ tests:
               assert_eq!(.srvObjCategory, "MASK")
               assert_eq!(.srvMethod, "GET_MASK_INFO")
               assert_eq!(.Purge_Tool, "PURGE_V1")
+              assert!(exists(."@timestamp"), "@timestamp field should exist after full pipeline")
+              assert!(!exists(.timestamp), "original timestamp should be removed")
+              ts_str = to_string!(."@timestamp")
+              assert!(contains(ts_str, "+08:00"), "@timestamp should have Asia/Taipei timezone offset")
 
   - name: "Integration: multiline sample end-to-end"
     inputs:
@@ -667,3 +723,5 @@ tests:
               assert_eq!(.maskGroupId, "TMEF78-376A-M001")
               assert_eq!(.product, "TMEF78")
               assert_eq!(.layer, "376A-M001")
+              assert!(exists(."@timestamp"), "@timestamp field should exist")
+              assert!(!exists(.timestamp), "original timestamp should be removed")

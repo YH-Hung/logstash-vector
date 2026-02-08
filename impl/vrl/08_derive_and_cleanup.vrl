@@ -3,6 +3,7 @@
 # - Derive maskGroupId from product-layer if missing
 # - Convert MaskListNo to integer
 # - Remove sensitive fields during query phase
+# - Rename .timestamp to .@timestamp and convert to Asia/Taipei timezone
 
 if is_null(.maskGroupId) {
   .MGtag = "null"
@@ -48,4 +49,11 @@ if query_phase {
   del(.maskGroupId)
   del(.product)
   del(.layer)
+}
+
+# Rename .timestamp to .@timestamp and convert UTC to Asia/Taipei timezone
+# Kibana requires @timestamp for time-based log views
+ts = del(.timestamp)
+if ts != null {
+  ."@timestamp" = format_timestamp!(ts, format: "%+", timezone: "Asia/Taipei")
 }

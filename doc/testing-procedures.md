@@ -143,7 +143,7 @@ Check that the output contains the expected fields and values:
   "message": "[2026-01-16 09:10:33:130]   [a027d5c0-8560-49e7-8f82-70901077a4bf] [TRACE] before SysUuid::set(): curSysUuid=a027d5c0-8560-49e7-8f82-70901077a4bf, preSysUuid=\n[2026-01-16 09:10:33:142]   [8e475fe2-0680-41f2-b734-20cd691d05f9] [TRACE] after SysUuid::set(): curSysUuid=8e475fe2-0680-41f2-b734-20cd691d05f9, preSysUuid=a027d5c0-8560-49e7-8f82-70901077a4bf\n[2026-01-16 09:10:33:166]   [8e475fe2-0680-41f2-b734-20cd691d05f9] Rqst_DisplayInfo {\"mask_lot_id\":\"EBGN29J.1\"}\n[2026-01-16 09:10:33:203]   [8e475fe2-0680-41f2-b734-20cd691d05f9] CMMSSrv::DisplayInfo() Begin ***\n[2026-01-16 09:10:33:210]   [8e475fe2-0680-41f2-b734-20cd691d05f9] MASKLOTID = 'EBGN29J.1'\n[2026-01-16 09:10:33:210]   [8e475fe2-0680-41f2-b734-20cd691d05f9] CMMSSrv::DisplayInfo() END ***\n[2026-01-16 09:10:33:211]   [8e475fe2-0680-41f2-b734-20cd691d05f9] Rep_DisplayInfo {\"gTxId\":\"8e475fe2-0680-41f2-b734-20cd691d05f9\", \"mask_group_id\":\"TMEF78-376A-M001\", \"product\":\"TMEF78\", \"layer\":\"376A-M001\"}",
   "path": "sample/web_hmib_1.log",
   "source_type": "file",
-  "timestamp": "2026-01-17T05:06:35.929107Z",
+  "@timestamp": "2026-01-17T13:06:35.929107+08:00",
   "host": "your-hostname"
 }
 ```
@@ -157,7 +157,7 @@ Check that the output contains the expected fields and values:
   "message": "[2026-01-16 09:10:33:130]   [8e475fe2-0680-41f2-b734-20cd691d05f9] [TRACE] before SysUuid::set(): curSysUuid=8e475fe2-0680-41f2-b734-20cd691d05f9, preSysUuid=a027d5c0-8560-49e7-8f82-70901077a4bf",
   "path": "sample/web_hmib_1.log",
   "source_type": "file",
-  "timestamp": "2026-01-17T05:06:36.930870Z",
+  "@timestamp": "2026-01-17T13:06:36.930870+08:00",
   "host": "your-hostname"
 }
 ```

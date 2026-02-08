@@ -23,7 +23,7 @@ NC = '\033[0m'
 # Expected schema definition
 EXPECTED_SCHEMA = {
     # Metadata fields (always present)
-    'required_fields': ['system', 'type', 'filename', 'message', 'path', 'timestamp'],
+    'required_fields': ['system', 'type', 'filename', 'message', 'path', '@timestamp'],
     
     # Business fields (conditional)
     'optional_fields': [
@@ -40,6 +40,7 @@ EXPECTED_SCHEMA = {
         'filename': str,
         'message': str,
         'path': str,
+        '@timestamp': str,
         'product': str,
         'layer': str,
         'maskGroupId': str,
