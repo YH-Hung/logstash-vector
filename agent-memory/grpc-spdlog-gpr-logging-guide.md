@@ -22,6 +22,7 @@ Required regex shape:
 - Set the `spdlog` pattern to `%v`; the handler formats the complete target line itself.
 - `gpr_log_severity` usually has `DEBUG`, `INFO`, and `ERROR`. The handler below maps `DEBUG` and `INFO` to `I`, and `ERROR` to `E`. The Vector regex also accepts `W` and `F` for compatibility with other log producers.
 - `gpr_set_log_function` and `gpr_set_log_verbosity` are gRPC Core APIs and may change in newer gRPC releases. If the server uses a gRPC version that has fully moved to Abseil logging, use an Abseil `LogSink` instead.
+- `args->file` comes from `__FILE__`. Most builds emit a bare basename (e.g. `server.cc`), which is what the Vector `file` metric label expects. Some build setups (e.g. Bazel, or CMake without relative source paths) emit a directory-prefixed path like `src/core/server.cc`. Because `file` becomes a Prometheus label, a path prefix would raise label cardinality. If your build emits prefixes, strip to the basename before formatting the line (e.g. take the substring after the last `/`).
 
 ## Example Implementation
 

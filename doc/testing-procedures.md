@@ -105,12 +105,12 @@ sources:
       - sample/web_hmib_1.log  # Changed from /app/log/web_*.log
     start_at_beginning: true   # Added for testing
     file_key: path
-    multiline:
-      start_pattern: '^\[.*\]\s\s\s\[.*\]\s\[TRACE\]\sbefore\sSysUuid::set\(\):\scurSysUuid=.*'
-      condition_pattern: '^\[.*\]\s\s\s\[.*\]\s\[TRACE\]\sbefore\sSysUuid::set\(\):\scurSysUuid=.*'
-      mode: halt_before
-      timeout_ms: 1000
 ```
+
+Multiline aggregation is no longer configured on the file source. It is handled
+downstream by the `ap_multiline_reduce` `reduce` transform (group_by `path`,
+`starts_when` on the SysUuid TRACE start pattern, merged via `concat_newline`),
+which is already defined in `impl/vector.yaml` and needs no change for testing.
 
 ### Step 4: Run Vector Test
 
@@ -199,9 +199,9 @@ Check that the output contains the expected fields and values:
 - Ensure pattern precedence (null checks) is working correctly
 
 **Issue: Multiline aggregation not working**
-- Verify `start_pattern` matches TRACE before lines
-- Check `condition_pattern` stops at correct boundaries
-- Test with `halt_before` mode configuration
+- Verify the `ap_multiline_reduce` `starts_when` regex matches the TRACE "before SysUuid::set()" lines
+- Check that events are grouped by `path` (the file source must set `file_key: path`)
+- Confirm `expire_after_ms` / `flush_period_ms` are large enough for lines to arrive within one group
 
 ### Debug Commands
 

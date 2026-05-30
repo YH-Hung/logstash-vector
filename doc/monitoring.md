@@ -53,14 +53,15 @@ sources:
     scrape_interval_secs: 15
 
 # Expose via Prometheus endpoint
-# NOTE: illustrative only — this project's actual sink is named `prometheus_metrics`
-# and also takes the gRPC log-metric transforms as inputs (see the block above).
+# NOTE: illustrative only — this project's actual sink is named `prometheus_metrics`,
+# binds 0.0.0.0:9598, and also takes the gRPC log-metric transforms as inputs (see
+# the block above). The example uses port 9599 to avoid clashing with the real sink.
 sinks:
   prometheus_exporter:
     type: prometheus_exporter
     inputs:
       - internal_metrics
-    address: "0.0.0.0:9598"
+    address: "0.0.0.0:9599"
 ```
 
 Alternatively, use the built-in API:
