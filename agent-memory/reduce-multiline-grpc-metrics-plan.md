@@ -15,7 +15,11 @@
 This plan was reviewed against the live repository. The structure is sound; the following corrections are folded into the tasks below and MUST be respected:
 
 1. **Prometheus port conflict.** `impl/vector.yaml` currently has **no** `prometheus_exporter` sink — only `elasticsearch_output` and `console_output`. `doc/monitoring.md:32-42` documents an *example* `internal_metrics -> prometheus_exporter` on `0.0.0.0:9598` that is **not** actually in the config. Two `prometheus_exporter` sinks cannot bind the same address. Therefore add **one** exporter on `9598` fed by all metric inputs (including `internal_metrics`), not a gRPC-only exporter that would collide later. See Task 3.
-2. **Vector is not installed in this environment.** Every `vector validate`/`vector test` step is a real gate that has not been run. Install/pin a known Vector version first (Task 0) and treat `reduce`, `starts_when`, `flush_period_ms`, and `log_to_metric` option names as version-sensitive — confirm each against that version's docs.
+2. **Toolchain pinned to Vector 0.55.0 (installed 2026-05-30 via `brew install vectordotdev/brew/vector`).** Two CLI facts confirmed for this version, applied throughout the plan:
+   - `vector validate` and `vector test` take **positional file paths**, NOT `--config` (e.g. `vector validate impl/vector.yaml`). `--config` only works on the top-level `vector` run command.
+   - `vector validate` runs environment checks and fails if `data_dir` (`tmp/vector`) is absent. Run `mkdir -p tmp/vector` first (it is gitignored). Add `--no-environment` to skip env/health checks when only config-shape validation is wanted.
+   - Baseline confirmed green on 2026-05-30: all 38 existing unit tests pass; `validate` reports "Validated" (an Elasticsearch DNS warning is expected — the ES host is unreachable in this env and its healthcheck is disabled).
+   - Treat `reduce`, `starts_when`, `flush_period_ms`, and `log_to_metric` option names as version-sensitive — confirm each against 0.55.0 if validation complains.
 3. **Reduce in unit tests is the top risk.** `vector test` must flush the open `reduce` group at end-of-input for the Task 1 test to emit. If it does not on the pinned version, fall back to the file-source integration smoke test in Task 1 Step 4b.
 4. **`requirements.md` already mis-describes multiline.** `doc/requirements.md` currently documents `mode: continue_through` + negated condition, but the live config uses `mode: halt_before` with identical start/condition patterns. Task 5 must correct this description, not just append the reduce note.
 5. **Existing multiline integration test stays valid.** `tests` → "Integration: multiline sample end-to-end" injects an already-combined message at `enrich_static`, so it bypasses `ap_multiline_reduce` and continues to pass unchanged. Do not delete it.
@@ -27,7 +31,7 @@ This plan was reviewed against the live repository. The structure is sound; the 
 - Main config: `impl/vector.yaml`.
 - Current AP file source uses source-level `multiline` under `sources.ap_log_files`.
 - Existing AP parsing is split into `impl/vrl/01_enrich_static.vrl` through `impl/vrl/08_derive_and_cleanup.vrl`.
-- Existing unit tests are embedded in `impl/vector.yaml`; there are 35 tests, including an end-to-end multiline test that currently injects an already-combined multiline message at `enrich_static`.
+- Existing unit tests are embedded in `impl/vector.yaml`; there are 38 tests (baseline confirmed 2026-05-30), including an end-to-end multiline test that currently injects an already-combined multiline message at `enrich_static`.
 - Existing monitoring docs describe a Prometheus exporter on `0.0.0.0:9598` in `doc/monitoring.md`.
 
 ## Assumptions
@@ -99,8 +103,8 @@ Note the exact version in `agent-memory/progress-memory.md`. Use that version's 
 Run:
 
 ```bash
-vector validate --config impl/vector.yaml
-vector test --config impl/vector.yaml
+vector validate impl/vector.yaml
+vector test impl/vector.yaml
 ```
 
 Expected: `Configuration is valid` and all 35 existing tests pass. This is the baseline you must not regress.
@@ -214,8 +218,8 @@ Add a test that inserts multiple AP log lines at `ap_multiline_reduce` and asser
 Run:
 
 ```bash
-vector validate --config impl/vector.yaml
-vector test --config impl/vector.yaml
+vector validate impl/vector.yaml
+vector test impl/vector.yaml
 ```
 
 Expected:
@@ -504,8 +508,8 @@ sum(rate(grpc_log_errors_total[5m]))
 Run:
 
 ```bash
-vector validate --config impl/vector.yaml
-vector test --config impl/vector.yaml
+vector validate impl/vector.yaml
+vector test impl/vector.yaml
 ```
 
 Expected:

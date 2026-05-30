@@ -36,9 +36,17 @@ Propose and store a plan/progress memory under `./agent-memory` for:
 - `doc/deployment.md` already lists port `9598` as optional Prometheus metrics access.
 - No `agent-memory` directory existed before this request.
 
-## Proposed Implementation State
+## Toolchain (confirmed 2026-05-30)
 
-No pipeline behavior has been changed yet. This session only created planning/memory files.
+- Vector **0.55.0** installed via `brew install vectordotdev/brew/vector` (`/opt/homebrew/bin/vector`).
+- `vector validate`/`vector test` use **positional paths**, NOT `--config`: `vector validate impl/vector.yaml`, `vector test impl/vector.yaml`.
+- `vector validate` needs `data_dir` to exist: `mkdir -p tmp/vector` (gitignored). Use `--no-environment` to skip env/health checks.
+- Baseline green: 38 existing unit tests pass; validate reports "Validated" (ES DNS warning expected, healthcheck disabled).
+- Working on branch `feat/reduce-multiline-grpc-metrics` (chosen 2026-05-30).
+
+## Implementation State
+
+Task 0 (toolchain pin + green baseline) complete. No pipeline behavior changed yet beyond planning-doc corrections.
 
 Recommended implementation order:
 
