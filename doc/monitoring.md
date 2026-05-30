@@ -7,9 +7,10 @@ This document describes how to monitor the Vector log processing pipeline and co
 1. [Vector Internal Metrics](#vector-internal-metrics)
 2. [Prometheus Integration](#prometheus-integration)
 3. [Key Metrics Reference](#key-metrics-reference)
-4. [Alert Thresholds](#alert-thresholds)
-5. [Grafana Dashboard](#grafana-dashboard)
-6. [Alert Rules](#alert-rules)
+4. [gRPC Log Metrics](#grpc-log-metrics)
+5. [Alert Thresholds](#alert-thresholds)
+6. [Grafana Dashboard](#grafana-dashboard)
+7. [Alert Rules](#alert-rules)
 
 ---
 
@@ -24,7 +25,25 @@ Vector exposes internal metrics via a Prometheus-compatible endpoint. These metr
 
 ### Enabling Metrics
 
-Add to your Vector configuration:
+The production configuration in `impl/vector.yaml` uses a single `prometheus_exporter` sink named `prometheus_metrics` that combines Vector internal metrics with gRPC log metrics:
+
+```yaml
+sources:
+  internal_metrics:
+    type: internal_metrics
+
+sinks:
+  prometheus_metrics:
+    type: prometheus_exporter
+    inputs:
+      - internal_metrics
+      - grpc_log_message_metrics
+      - grpc_log_error_metrics
+    address: "0.0.0.0:9598"
+    flush_period_secs: 300   # keeps rare error counters visible across scrape cycles
+```
+
+For a minimal setup (internal metrics only), a simpler configuration is sufficient:
 
 ```yaml
 # Add internal metrics source
@@ -206,6 +225,36 @@ histogram_quantile(0.99, rate(http_client_request_duration_seconds_bucket[5m]))
 
 # ES request success rate
 sum(rate(http_client_requests_total{status="200"}[5m])) / sum(rate(http_client_requests_total[5m]))
+```
+
+---
+
+## gRPC Log Metrics
+
+The gRPC metrics pipeline produces two application-level counters from log files matching `/app/log/grpc_*.log`. These are exposed alongside Vector internal metrics at `0.0.0.0:9598/metrics`.
+
+### Counters
+
+| Counter | Tags | Description |
+|---------|------|-------------|
+| `grpc_log_messages_total` | `severity`, `severity_code`, `file` | Every successfully parsed gRPC log line (info, warning, error, fatal) |
+| `grpc_log_errors_total` | `severity`, `file` | Error and fatal lines only |
+
+Severity values: `info` (I), `warning` (W), `error` (E), `fatal` (F). Error and fatal lines are intentionally counted in **both** counters — `grpc_log_messages_total` for overall rate tracking and `grpc_log_errors_total` for alerting.
+
+Lines that do not match the glog/gpr format are dropped and do not appear in any counter.
+
+### Example PromQL Queries
+
+```promql
+# Total gRPC log messages by severity
+sum by (severity) (grpc_log_messages_total)
+
+# Per-file gRPC message rate (5m window)
+sum by (file) (rate(grpc_log_messages_total[5m]))
+
+# Overall gRPC error/fatal rate
+sum(rate(grpc_log_errors_total[5m]))
 ```
 
 ---

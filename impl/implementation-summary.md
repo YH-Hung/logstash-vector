@@ -2,7 +2,7 @@
 
 ## Status: ✅ Functionally Complete and Tested
 
-**Last Updated**: 2026-01-29
+**Last Updated**: 2026-05-30
 
 ## Scope
 
@@ -10,8 +10,8 @@ Migrate the Logstash pipeline that processes `ap_log` file inputs from `/app/log
 
 ## Input and Multiline Handling
 
-- File source tails `/app/log/web_*.log` with `read_from: end` and adds `system: "legendary"` plus `type: "ap_log"`.
-- Multiline aggregation is configured to start on TRACE entries that match `before SysUuid::set()` and continues through subsequent lines until the next start pattern appears.
+- File source (`ap_log_files`) tails `/app/log/web_*.log` with `read_from: end`. Static enrichment (`enrich_static`) adds `system: "legendary"` and `type: "ap_log"`.
+- Multiline aggregation is implemented by the `reduce` transform `ap_multiline_reduce` (NOT source-level multiline). It groups events by `path`, merges lines into `.message` via `concat_newline`, and starts a new aggregate (`starts_when`) whenever a line matches the SysUuid TRACE start pattern — preserving the original Logstash `halt_before` behavior.
 
 ## Parsing and Field Extraction
 
@@ -24,6 +24,7 @@ VRL parsing logic is externalized into separate files in `impl/vrl/`:
 - `06_parse_mask_lot_id.vrl` - MaskLotId with 4 fallback patterns
 - `07_parse_other_fields.vrl` - Remaining fields extraction
 - `08_derive_and_cleanup.vrl` - Field derivation and query phase cleanup
+- `09_parse_grpc_log.vrl` - Parses glog/gpr-style gRPC log lines into structured `grpc_*` fields; non-matching lines are dropped
 
 Field extraction summary:
 - Filename is parsed from `.path` using `%{GREEDYDATA}/%{NOTSPACE:filename}`.
@@ -50,10 +51,21 @@ Field extraction summary:
 - Useful for local development and debugging without Elasticsearch dependency.
 - Run with `vector --config impl/vector.yaml --require-healthy false` for local testing.
 
+### gRPC Log Metrics Pipeline
+
+An independent pipeline (no connection to the AP/Elasticsearch flow) converts gRPC server log files to Prometheus metrics:
+
+1. **Source** (`grpc_log_files`): tails `/app/log/grpc_*.log` with `read_from: end`.
+2. **Transform** (`parse_grpc_log`): remap using `impl/vrl/09_parse_grpc_log.vrl`. Parses glog/gpr-style lines into `grpc_severity`, `grpc_severity_code`, `grpc_date`, `grpc_time`, `grpc_tid`, `grpc_file`, `grpc_line`, `grpc_message`. Non-matching lines are dropped (`drop_on_abort: true`, `drop_on_error: true`).
+3. **Transform** (`grpc_log_message_metrics`): `log_to_metric` counter `grpc_log_messages_total` (tags: `severity`, `severity_code`, `file`) — counts every parsed line.
+4. **Transform** (`grpc_error_log_filter`): filter on `grpc_severity == "error" || grpc_severity == "fatal"`.
+5. **Transform** (`grpc_log_error_metrics`): `log_to_metric` counter `grpc_log_errors_total` (tags: `severity`, `file`) — counts only error/fatal lines. Error/fatal lines are intentionally counted in both counters.
+6. **Sink** (`prometheus_metrics`): `prometheus_exporter` on `0.0.0.0:9598`, inputs include `internal_metrics`, `grpc_log_message_metrics`, and `grpc_log_error_metrics`. Uses `flush_period_secs: 300` to keep rare error counters visible across scrape cycles.
+
 ## Testing
 
 ### Unit Tests
-- **35 unit tests** embedded in `impl/vector.yaml` covering:
+- **48 unit tests** embedded in `impl/vector.yaml` covering:
   - Field extraction (all 12 business fields)
   - Multiline event aggregation
   - Query phase conditional logic
@@ -61,7 +73,7 @@ Field extraction summary:
   - Type conversions
   - Error handling
 - Run `vector test impl/vector.yaml` to execute the unit test suite.
-- **Status**: ✅ All 35 tests passing
+- **Status**: ✅ All 48 tests passing
 
 ### Integration Testing
 - **Complete integration testing framework** in `tests/integration/`:
@@ -80,7 +92,7 @@ Field extraction summary:
 - Conditional logic (query phase, field derivation) implemented
 - Type conversions working
 - Elasticsearch output configured
-- 35/35 unit tests passing
+- 48/48 unit tests passing
 - Integration testing framework complete
 
 ### 🔄 Ready for Execution

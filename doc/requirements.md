@@ -15,14 +15,17 @@ This project aims to migrate a Logstash configuration to Vector while maintainin
 - **Additional Field**: `system => "legendary"`
 
 **Multiline Processing** (ap_log type only):
-- **Start Pattern**: `\[%{DATA}\]\s\s\s\[%{DATA}\]\s\[TRACE\]\sbefore\sSysUuid::set():\scurSysUuid=%{GREEDYDATA}`
+
+Multiline aggregation is implemented by the Vector `reduce` transform `ap_multiline_reduce` (NOT source-level multiline). Events from `ap_log_files` are grouped by `path`; all lines within a group are merged into `.message` via the `concat_newline` strategy. A new aggregate begins (`starts_when`) whenever a line matches the SysUuid TRACE start pattern — equivalent to the former Logstash `halt_before` behavior.
+
+- **Start Pattern (VRL)**: `match(to_string!(.message), r'^\[.*\]\s\s\s\[.*\]\s\[TRACE\]\sbefore\sSysUuid::set\(\):\scurSysUuid=.*')`
   - **Meaning**: Matches log lines that start with timestamp patterns followed by TRACE level messages about SysUuid being set
-  - **Pattern Breakdown**: `\[%{DATA}\]` matches timestamp with spaces/colons (like `2026-01-16 09:10:33:130`), `\s\s\s` matches three spaces, `\[%{DATA}\]` matches UUID (like `a027d5c0-8560-49e7-8f82-70901077a4bf`), `\s\[TRACE\]` matches space and TRACE level, remaining text matches the SysUuid message content
+  - **Pattern Breakdown**: `\[.*\]` matches timestamp with spaces/colons (like `2026-01-16 09:10:33:130`), `\s\s\s` matches three spaces, `\[.*\]` matches UUID (like `a027d5c0-8560-49e7-8f82-70901077a4bf`), `\s\[TRACE\]` matches space and TRACE level, remaining text matches the SysUuid message content
   - **Example**: Matches `[2026-01-16 09:10:33:130]   [a027d5c0-8560-49e7-8f82-70901077a4bf] [TRACE] before SysUuid::set(): curSysUuid=a027d5c0-8560-49e7-8f82-70901077a4bf, preSysUuid=`
-- **Mode**: `continue_through` (continue aggregating lines while the condition pattern matches)
-- **Condition Pattern**: NOT matching the start pattern (negate: true)
-- **Behavior**: When a line matches the start pattern, it begins a new multiline event. All subsequent lines that DON'T match the start pattern are appended to this event until another start pattern is found.
-- **Real Example**: The first TRACE line starts a multiline event, and the following 6 lines (until the next TRACE "before" line) would be combined into one log event:
+- **Merge strategy**: `message: concat_newline`, `path: retain`
+- **Expiry**: `expire_after_ms: 1000`, `flush_period_ms: 100`
+- **Behavior**: When a line matches the start pattern, the previous aggregate is flushed and a new one begins. All subsequent lines that do NOT match the start pattern are appended (newline-separated) to the current aggregate until the next start pattern or expiry.
+- **Real Example**: The first TRACE line starts a multiline event, and the following 6 lines (until the next TRACE "before" line) are combined into one log event:
   ```
   [2026-01-16 09:10:33:130]   [a027d5c0-8560-49e7-8f82-70901077a4bf] [TRACE] before SysUuid::set(): curSysUuid=a027d5c0-8560-49e7-8f82-70901077a4bf, preSysUuid=
   [2026-01-16 09:10:33:142]   [8e475fe2-0680-41f2-b734-20cd691d05f9] [TRACE] after SysUuid::set(): curSysUuid=8e475fe2-0680-41f2-b734-20cd691d05f9, preSysUuid=a027d5c0-8560-49e7-8f82-70901077a4bf
@@ -318,6 +321,58 @@ sinks:
 - Combine related operations in single transforms
 - Use efficient VRL expressions
 - Configure appropriate buffer sizes
+
+## gRPC Log Metrics Pipeline
+
+An independent pipeline ingests gRPC server log files and converts them to Prometheus metrics. It does not feed into the Elasticsearch AP log pipeline.
+
+### Source
+
+- **Path Pattern**: `/app/log/grpc_*.log`
+- **Read Position**: Start from end of file (`read_from: end`)
+- **Field**: `path` (file key)
+
+### Parsing (`parse_grpc_log`)
+
+Each line is matched against the glog/gpr-style format using the following regex:
+
+```
+^(?P<sev>[IWEF])(?P<date>\d{4}) (?P<time>\d{2}:\d{2}:\d{2}\.\d{6})\s+(?P<tid>\d+) (?P<file>[^:]+):(?P<line>\d+)\] (?P<msg>.*)$
+```
+
+**Extracted fields**:
+- `grpc_severity_code` — raw severity letter (`I`, `W`, `E`, `F`)
+- `grpc_severity` — mapped severity string: `I`→`info`, `W`→`warning`, `E`→`error`, `F`→`fatal` (else `unknown`)
+- `grpc_date` — four-digit MMDD date
+- `grpc_time` — `HH:MM:SS.microseconds`
+- `grpc_tid` — thread ID (integer)
+- `grpc_file` — source filename (e.g. `server.cc`)
+- `grpc_line` — source line number (integer)
+- `grpc_message` — the log message text
+- `grpc_log: true` — flag indicating a successfully parsed gRPC log line
+
+Lines that do **not** match the regex are dropped (`drop_on_abort: true`, `drop_on_error: true`); only matching lines proceed to the metric transforms.
+
+### Metrics
+
+Two Prometheus counters are produced via `log_to_metric` transforms:
+
+| Counter | Tags | Description |
+|---------|------|-------------|
+| `grpc_log_messages_total` | `severity`, `severity_code`, `file` | Every successfully parsed gRPC log line |
+| `grpc_log_errors_total` | `severity`, `file` | Error and fatal lines only |
+
+Error and fatal lines are intentionally counted in **both** `grpc_log_messages_total` (for overall rate) and `grpc_log_errors_total` (for alerting).
+
+### Prometheus Exporter
+
+Metrics are exposed on the single `prometheus_metrics` sink (type `prometheus_exporter`) at `0.0.0.0:9598`, along with Vector internal metrics. The sink uses `flush_period_secs: 300` to keep low-frequency error counters visible across multiple scrape cycles.
+
+### External Server Logging Contract
+
+See `agent-memory/grpc-spdlog-gpr-logging-guide.md` for the contract the C++ gRPC server must satisfy to produce log lines in the expected format.
+
+---
 
 ## Risk Assessment
 
