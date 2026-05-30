@@ -389,6 +389,7 @@ transforms:
       - parse_grpc_log
     metrics:
       - type: counter
+        field: grpc_severity
         name: grpc_log_messages_total
         tags:
           severity: "{{ grpc_severity }}"
@@ -401,13 +402,14 @@ transforms:
       - grpc_error_log_filter
     metrics:
       - type: counter
+        field: grpc_severity
         name: grpc_log_errors_total
         tags:
           severity: "{{ grpc_severity }}"
           file: "{{ grpc_file }}"
 ```
 
-The separate filter branch avoids relying on version-specific per-metric condition support inside `log_to_metric`.
+`field:` is REQUIRED by `log_to_metric` in Vector 0.55.0 (validation fails without it). With the default `increment_by_value: false`, the counter increments by 1 for each event in which `field` exists; `grpc_severity` is always present (the parser sets it unconditionally, including an `else "unknown"` branch), so each parsed gRPC line counts once. The separate filter branch avoids relying on version-specific per-metric condition support inside `log_to_metric`.
 
 - [ ] **Step 2: Add a single Prometheus exporter on 9598**
 
