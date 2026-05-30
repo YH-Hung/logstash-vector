@@ -294,7 +294,7 @@ sinks:
 ### Logstash to Vector Differences
 - **Configuration Format**: Ruby DSL → YAML/TOML
 - **Processing Logic**: Ruby code → VRL expressions
-- **Multiline**: Logstash multiline filter → File source multiline option
+- **Multiline**: Logstash multiline filter → Vector `reduce` transform (`ap_multiline_reduce`)
 - **Output**: Logstash elasticsearch output → Vector elasticsearch sink
 
 ### Compatibility Verification
@@ -362,7 +362,7 @@ Two Prometheus counters are produced via `log_to_metric` transforms:
 | `grpc_log_messages_total` | `severity`, `severity_code`, `file` | Every successfully parsed gRPC log line |
 | `grpc_log_errors_total` | `severity`, `file` | Error and fatal lines only |
 
-Error and fatal lines are intentionally counted in **both** `grpc_log_messages_total` (for overall rate) and `grpc_log_errors_total` (for alerting).
+`grpc_log_errors_total` is fed by an intermediate `grpc_error_log_filter` transform that passes only `error`/`fatal` severity events; `grpc_log_messages_total` is fed directly by `parse_grpc_log`. As a result, error and fatal lines are intentionally counted in **both** `grpc_log_messages_total` (for overall rate) and `grpc_log_errors_total` (for alerting).
 
 ### Prometheus Exporter
 

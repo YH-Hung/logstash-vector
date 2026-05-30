@@ -53,6 +53,8 @@ sources:
     scrape_interval_secs: 15
 
 # Expose via Prometheus endpoint
+# NOTE: illustrative only — this project's actual sink is named `prometheus_metrics`
+# and also takes the gRPC log-metric transforms as inputs (see the block above).
 sinks:
   prometheus_exporter:
     type: prometheus_exporter
