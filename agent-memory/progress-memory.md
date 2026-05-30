@@ -46,7 +46,12 @@ Propose and store a plan/progress memory under `./agent-memory` for:
 
 ## Implementation State
 
-Task 0 (toolchain pin + green baseline) complete. No pipeline behavior changed yet beyond planning-doc corrections.
+COMPLETE and merged to `main` (merge commit, branch feat/reduce-multiline-grpc-metrics deleted). All 6 tasks done; 48/48 Vector unit tests pass; `vector validate` clean.
+
+As-built:
+- AP multiline now via `reduce` transform `ap_multiline_reduce` (group_by path, starts_when SysUuid TRACE pattern, concat_newline, expire_after_ms 1000, flush_period_ms 100); source-level multiline removed; `enrich_static` reads from it.
+- gRPC pipeline: `grpc_log_files` (/app/log/grpc_*.log) → `parse_grpc_log` (impl/vrl/09_parse_grpc_log.vrl, drop_on_abort/error) → `grpc_log_message_metrics` (counter grpc_log_messages_total, tags severity/severity_code/file) and `grpc_error_log_filter` → `grpc_log_error_metrics` (counter grpc_log_errors_total, tags severity/file). Single `prometheus_metrics` exporter on 0.0.0.0:9598 (also internal_metrics), flush_period_secs 300. log_to_metric counters require `field:` (used grpc_severity).
+- Docs updated: requirements.md, implementation-summary.md, monitoring.md, testing-procedures.md; external guide at agent-memory/grpc-spdlog-gpr-logging-guide.md.
 
 Recommended implementation order:
 
