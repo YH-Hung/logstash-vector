@@ -1,7 +1,7 @@
 data_dir: tmp/vector
 
 sources:
-  # Vector's own operational metrics, exposed alongside the gRPC log metrics
+  # Vector's own operational metrics (CPU, events, errors), exposed on the same /metrics endpoint
   internal_metrics:
     type: internal_metrics
 
@@ -99,13 +99,15 @@ transforms:
     drop_on_abort: true
     drop_on_error: true
 
-  # gRPC metrics: count all parsed lines, and a separate error/fatal counter
+  # gRPC metrics. NOTE: error/fatal lines are intentionally counted in BOTH
+  # grpc_log_messages_total (overall rate) and grpc_log_errors_total (alerting).
   grpc_error_log_filter:
     type: filter
     inputs:
       - parse_grpc_log
     condition: '.grpc_severity == "error" || .grpc_severity == "fatal"'
 
+  # Count every parsed gRPC line, tagged by severity + source file
   grpc_log_message_metrics:
     type: log_to_metric
     inputs:
@@ -119,6 +121,7 @@ transforms:
           severity_code: "{{ grpc_severity_code }}"
           file: "{{ grpc_file }}"
 
+  # Count only error/fatal lines (from the filter above)
   grpc_log_error_metrics:
     type: log_to_metric
     inputs:
@@ -174,6 +177,9 @@ sinks:
       - grpc_log_message_metrics
       - grpc_log_error_metrics
     address: "0.0.0.0:9598"
+    # Keep low-frequency counters (e.g. rare gRPC errors) visible across multiple
+    # scrape cycles; must be larger than Prometheus' scrape interval.
+    flush_period_secs: 300
 
 tests:
   # ============================================================================
@@ -961,7 +967,7 @@ tests:
               assert_eq!(.tags.severity_code, "I")
               assert_eq!(.tags.file, "server.cc")
 
-  - name: "Unit: grpc_error_log_filter - passes error and fatal, drops info"
+  - name: "Unit: grpc_error_log_filter - passes error severity"
     inputs:
       - insert_at: grpc_error_log_filter
         type: log
@@ -974,6 +980,20 @@ tests:
           - type: vrl
             source: |
               assert_eq!(.grpc_severity, "error")
+
+  - name: "Unit: grpc_error_log_filter - passes fatal severity"
+    inputs:
+      - insert_at: grpc_error_log_filter
+        type: log
+        log_fields:
+          grpc_severity: "fatal"
+          grpc_file: "server.cc"
+    outputs:
+      - extract_from: grpc_error_log_filter
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.grpc_severity, "fatal")
 
   - name: "Unit: grpc_log_error_metrics - counts an error line"
     inputs:
