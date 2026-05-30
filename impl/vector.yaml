@@ -1,6 +1,10 @@
 data_dir: tmp/vector
 
 sources:
+  # Vector's own operational metrics, exposed alongside the gRPC log metrics
+  internal_metrics:
+    type: internal_metrics
+
   ap_log_files:
     type: file
     include:
@@ -95,6 +99,38 @@ transforms:
     drop_on_abort: true
     drop_on_error: true
 
+  # gRPC metrics: count all parsed lines, and a separate error/fatal counter
+  grpc_error_log_filter:
+    type: filter
+    inputs:
+      - parse_grpc_log
+    condition: '.grpc_severity == "error" || .grpc_severity == "fatal"'
+
+  grpc_log_message_metrics:
+    type: log_to_metric
+    inputs:
+      - parse_grpc_log
+    metrics:
+      - type: counter
+        field: grpc_severity
+        name: grpc_log_messages_total
+        tags:
+          severity: "{{ grpc_severity }}"
+          severity_code: "{{ grpc_severity_code }}"
+          file: "{{ grpc_file }}"
+
+  grpc_log_error_metrics:
+    type: log_to_metric
+    inputs:
+      - grpc_error_log_filter
+    metrics:
+      - type: counter
+        field: grpc_severity
+        name: grpc_log_errors_total
+        tags:
+          severity: "{{ grpc_severity }}"
+          file: "{{ grpc_file }}"
+
 sinks:
   elasticsearch_output:
     type: elasticsearch
@@ -130,6 +166,14 @@ sinks:
       - derive_and_cleanup
     encoding:
       codec: json
+
+  prometheus_metrics:
+    type: prometheus_exporter
+    inputs:
+      - internal_metrics
+      - grpc_log_message_metrics
+      - grpc_log_error_metrics
+    address: "0.0.0.0:9598"
 
 tests:
   # ============================================================================
@@ -894,3 +938,56 @@ tests:
               assert_eq!(.grpc_severity, "fatal")
               assert_eq!(.grpc_file, "server.cc")
               assert_eq!(.grpc_line, 99)
+
+  # ============================================================================
+  # gRPC metric transform tests
+  # ============================================================================
+  - name: "Unit: grpc_log_message_metrics - counts a parsed line"
+    inputs:
+      - insert_at: grpc_log_message_metrics
+        type: log
+        log_fields:
+          grpc_severity: "info"
+          grpc_severity_code: "I"
+          grpc_file: "server.cc"
+    outputs:
+      - extract_from: grpc_log_message_metrics
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.name, "grpc_log_messages_total")
+              assert_eq!(.kind, "incremental")
+              assert_eq!(.tags.severity, "info")
+              assert_eq!(.tags.severity_code, "I")
+              assert_eq!(.tags.file, "server.cc")
+
+  - name: "Unit: grpc_error_log_filter - passes error and fatal, drops info"
+    inputs:
+      - insert_at: grpc_error_log_filter
+        type: log
+        log_fields:
+          grpc_severity: "error"
+          grpc_file: "transport.cc"
+    outputs:
+      - extract_from: grpc_error_log_filter
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.grpc_severity, "error")
+
+  - name: "Unit: grpc_log_error_metrics - counts an error line"
+    inputs:
+      - insert_at: grpc_log_error_metrics
+        type: log
+        log_fields:
+          grpc_severity: "error"
+          grpc_file: "transport.cc"
+    outputs:
+      - extract_from: grpc_log_error_metrics
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.name, "grpc_log_errors_total")
+              assert_eq!(.kind, "incremental")
+              assert_eq!(.tags.severity, "error")
+              assert_eq!(.tags.file, "transport.cc")
