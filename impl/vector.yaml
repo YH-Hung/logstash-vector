@@ -145,6 +145,41 @@ tests:
               assert!(contains!(.message, "Rqst_DisplayInfo"))
               assert!(contains!(.message, "Rep_DisplayInfo"))
               assert!(contains!(.message, "\n"))
+              assert_eq!(length(split(to_string!(.message), "\n")), 3)
+
+  - name: "Unit: ap_multiline_reduce - second start opens a new group"
+    inputs:
+      - insert_at: ap_multiline_reduce
+        type: log
+        log_fields:
+          message: '[2026-01-16 09:10:33:130]   [grp1] [TRACE] before SysUuid::set(): curSysUuid=grp1, preSysUuid='
+          path: /app/log/web_hmib_1.log
+      - insert_at: ap_multiline_reduce
+        type: log
+        log_fields:
+          message: '[2026-01-16 09:10:33:166]   [grp1] Rqst_DisplayInfo group-one-body'
+          path: /app/log/web_hmib_1.log
+      - insert_at: ap_multiline_reduce
+        type: log
+        log_fields:
+          message: '[2026-01-16 09:10:34:200]   [grp2] [TRACE] before SysUuid::set(): curSysUuid=grp2, preSysUuid=grp1'
+          path: /app/log/web_hmib_1.log
+      - insert_at: ap_multiline_reduce
+        type: log
+        log_fields:
+          message: '[2026-01-16 09:10:34:240]   [grp2] Rqst_DisplayInfo group-two-body'
+          path: /app/log/web_hmib_1.log
+    outputs:
+      - extract_from: ap_multiline_reduce
+        conditions:
+          - type: vrl
+            source: |
+              # First group (grp1): the second start-pattern line must have closed it,
+              # so it contains group-one-body but NOT group-two-body.
+              assert!(contains!(.message, "curSysUuid=grp1"))
+              assert!(contains!(.message, "group-one-body"))
+              assert!(!contains!(.message, "group-two-body"))
+              assert!(contains!(.message, "\n"))
 
   # ============================================================================
   # Step 1: enrich_static tests
