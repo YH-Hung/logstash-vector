@@ -1,0 +1,40 @@
+# Step 9: Parse C++ gRPC (glog/gpr) style log lines into structured fields.
+# Non-matching lines abort and are dropped by the parse_grpc_log transform
+# (drop_on_abort / drop_on_error). Severity letter is mapped to a word.
+
+# Coerce to string first so a non-string .message produces a clean error we can drop on.
+msg_str, msg_err = to_string(.message)
+if msg_err != null {
+  abort
+}
+
+# VRL uses the Rust regex crate; named groups use the (?P<name>...) form.
+parsed, err = parse_regex(msg_str, r'^(?P<sev>[IWEF])(?P<date>\d{4}) (?P<time>\d{2}:\d{2}:\d{2}\.\d{6})\s+(?P<tid>\d+) (?P<file>[^:]+):(?P<line>\d+)\] (?P<msg>.*)$')
+
+if err != null {
+  abort
+}
+
+.grpc_log = true
+.grpc_severity_code = parsed.sev
+# gRPC glog dates are MMDD (no year). date/time/tid are kept for future enrichment;
+# Task 3 metrics tag only on severity + file. grpc_file is the source basename
+# (e.g. server.cc) — glog does not emit a directory prefix.
+.grpc_date = parsed.date
+.grpc_time = parsed.time
+.grpc_tid = to_int!(parsed.tid)
+.grpc_file = parsed.file
+.grpc_line = to_int!(parsed.line)
+.grpc_message = parsed.msg
+
+if .grpc_severity_code == "I" {
+  .grpc_severity = "info"
+} else if .grpc_severity_code == "W" {
+  .grpc_severity = "warning"
+} else if .grpc_severity_code == "E" {
+  .grpc_severity = "error"
+} else if .grpc_severity_code == "F" {
+  .grpc_severity = "fatal"
+} else {
+  .grpc_severity = "unknown"
+}
