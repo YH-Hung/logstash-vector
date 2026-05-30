@@ -1,4 +1,4 @@
-# Step 09: Parse C++ gRPC (glog/gpr) style log lines into structured fields.
+# Step 9: Parse C++ gRPC (glog/gpr) style log lines into structured fields.
 # Non-matching lines abort and are dropped by the parse_grpc_log transform
 # (drop_on_abort / drop_on_error). Severity letter is mapped to a word.
 
@@ -17,6 +17,9 @@ if err != null {
 
 .grpc_log = true
 .grpc_severity_code = parsed.sev
+# gRPC glog dates are MMDD (no year). date/time/tid are kept for future enrichment;
+# Task 3 metrics tag only on severity + file. grpc_file is the source basename
+# (e.g. server.cc) — glog does not emit a directory prefix.
 .grpc_date = parsed.date
 .grpc_time = parsed.time
 .grpc_tid = to_int!(parsed.tid)
@@ -32,4 +35,6 @@ if .grpc_severity_code == "I" {
   .grpc_severity = "error"
 } else if .grpc_severity_code == "F" {
   .grpc_severity = "fatal"
+} else {
+  .grpc_severity = "unknown"
 }

@@ -853,7 +853,44 @@ tests:
         conditions:
           - type: vrl
             source: |
+              assert_eq!(.grpc_log, true)
+              assert_eq!(.grpc_tid, 12345)
               assert_eq!(.grpc_severity_code, "E")
               assert_eq!(.grpc_severity, "error")
               assert_eq!(.grpc_file, "transport.cc")
               assert_eq!(.grpc_line, 201)
+
+  # Note: drop-on-abort for non-gRPC lines cannot be asserted in Vector unit tests (no "empty output" assertion).
+  - name: "Unit: parse_grpc_log - parses grpc warning log line"
+    inputs:
+      - insert_at: parse_grpc_log
+        type: log
+        log_fields:
+          message: "W0530 12:34:56.654321   222 channel.cc:55] retrying connection"
+          path: "/app/log/grpc_server.log"
+    outputs:
+      - extract_from: parse_grpc_log
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.grpc_severity_code, "W")
+              assert_eq!(.grpc_severity, "warning")
+              assert_eq!(.grpc_file, "channel.cc")
+              assert_eq!(.grpc_line, 55)
+
+  - name: "Unit: parse_grpc_log - parses grpc fatal log line"
+    inputs:
+      - insert_at: parse_grpc_log
+        type: log
+        log_fields:
+          message: "F0530 12:34:57.000001   333 server.cc:99] fatal out of memory"
+          path: "/app/log/grpc_server.log"
+    outputs:
+      - extract_from: parse_grpc_log
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.grpc_severity_code, "F")
+              assert_eq!(.grpc_severity, "fatal")
+              assert_eq!(.grpc_file, "server.cc")
+              assert_eq!(.grpc_line, 99)
