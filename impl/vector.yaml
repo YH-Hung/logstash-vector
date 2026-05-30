@@ -8,6 +8,13 @@ sources:
     read_from: end
     file_key: path
 
+  grpc_log_files:
+    type: file
+    include:
+      - /app/log/grpc_*.log
+    read_from: end
+    file_key: path
+
 transforms:
   # Step 0: Aggregate multiline AP log records after file ingestion
   ap_multiline_reduce:
@@ -78,6 +85,15 @@ transforms:
     inputs:
       - parse_other_fields
     file: impl/vrl/08_derive_and_cleanup.vrl
+
+  # gRPC log pipeline: parse glog/gpr-style lines into structured fields
+  parse_grpc_log:
+    type: remap
+    inputs:
+      - grpc_log_files
+    file: impl/vrl/09_parse_grpc_log.vrl
+    drop_on_abort: true
+    drop_on_error: true
 
 sinks:
   elasticsearch_output:
@@ -799,3 +815,45 @@ tests:
               assert_eq!(.layer, "376A-M001")
               assert!(exists(."@timestamp"), "@timestamp field should exist")
               assert!(!exists(.timestamp), "original timestamp should be removed")
+
+  # ============================================================================
+  # Step 9: parse_grpc_log tests
+  # ============================================================================
+  - name: "Unit: parse_grpc_log - parses grpc log line"
+    inputs:
+      - insert_at: parse_grpc_log
+        type: log
+        log_fields:
+          message: "I0530 12:34:56.123456   12345 server.cc:87] started grpc server"
+          path: "/app/log/grpc_server.log"
+    outputs:
+      - extract_from: parse_grpc_log
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.grpc_log, true)
+              assert_eq!(.grpc_severity_code, "I")
+              assert_eq!(.grpc_severity, "info")
+              assert_eq!(.grpc_date, "0530")
+              assert_eq!(.grpc_time, "12:34:56.123456")
+              assert_eq!(.grpc_tid, 12345)
+              assert_eq!(.grpc_file, "server.cc")
+              assert_eq!(.grpc_line, 87)
+              assert_eq!(.grpc_message, "started grpc server")
+
+  - name: "Unit: parse_grpc_log - parses grpc error log line"
+    inputs:
+      - insert_at: parse_grpc_log
+        type: log
+        log_fields:
+          message: "E0530 12:35:01.000042   12345 transport.cc:201] connection reset"
+          path: "/app/log/grpc_server.log"
+    outputs:
+      - extract_from: parse_grpc_log
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.grpc_severity_code, "E")
+              assert_eq!(.grpc_severity, "error")
+              assert_eq!(.grpc_file, "transport.cc")
+              assert_eq!(.grpc_line, 201)
