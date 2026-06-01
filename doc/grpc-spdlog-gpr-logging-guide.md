@@ -24,6 +24,41 @@ Required regex shape:
 - `gpr_set_log_function` and `gpr_set_log_verbosity` are gRPC Core APIs and may change in newer gRPC releases. If the server uses a gRPC version that has fully moved to Abseil logging, use an Abseil `LogSink` instead.
 - `args->file` comes from `__FILE__`. Most builds emit a bare basename (e.g. `server.cc`), which is what the Vector `file` metric label expects. Some build setups (e.g. Bazel, or CMake without relative source paths) emit a directory-prefixed path like `src/core/server.cc`. Because `file` becomes a Prometheus label, a path prefix would raise label cardinality. If your build emits prefixes, strip to the basename before formatting the line (e.g. take the substring after the last `/`).
 
+## Thread Safety
+
+`gpr_set_log_function` registers a callback that gRPC Core may invoke from many internal
+threads at the same time. The handler must therefore be reentrant and thread-safe. The
+example below is written to satisfy this; the points to preserve when editing it:
+
+- **Use the `_mt` logger, never `_st`.** `spdlog::rotating_logger_mt` uses a thread-safe sink
+  (guarded by an internal mutex). The `_st` ("single-threaded") variants do no locking and
+  will corrupt output or race under concurrent `gpr` callbacks. Each `logger->log()` call is
+  atomic, so whole lines are written without interleaving — this matters because the entire
+  formatted line is passed as a single `%v` message and must not be split across threads.
+- **Use reentrant time conversion.** The example deliberately calls `localtime_r` (POSIX) /
+  `localtime_s` (Windows). Do **not** switch to plain `localtime`: it returns a pointer into
+  a shared static `tm` buffer and is not reentrant, so concurrent calls would race and
+  produce garbled timestamps.
+- **`FormatGrpcLogLine` is safe as written** because it touches only stack-local state
+  (`local_tm`, `date_time`, `micros`) plus the read-only `args`. Keep any new state local;
+  do not introduce shared mutable buffers.
+- **Initialize the global logger once, before serving.** `g_grpc_logger` is assigned in
+  `ConfigureGrpcLogging()` during process init, before the server (and its threads) start,
+  and is only read afterward. Concurrent reads of an unchanging `shared_ptr` are safe, but
+  **do not reassign `g_grpc_logger` while the server is running** — assignment concurrent
+  with the handler's reads is a data race. If you must swap loggers at runtime, use
+  `std::atomic<std::shared_ptr<...>>` / `std::atomic_store` instead of a plain assignment.
+- **Configure before threads exist.** `set_pattern`, `set_level`, and `flush_on` are not safe
+  to call concurrently with logging. Call them only inside `ConfigureGrpcLogging()` at
+  startup (as shown), never after gRPC threads are active.
+- **Call `ConfigureGrpcLogging()` exactly once.** `rotating_logger_mt("grpc-core", …)`
+  registers the name in spdlog's global registry and throws `spdlog_ex` on a duplicate name,
+  so a second call (e.g. during re-init or in tests) will throw.
+- **High log volume.** The thread-safe sink serializes writes on a mutex, which is fine for
+  typical `gpr` volume. For very high rates, consider an async logger (`spdlog::async`) with
+  a background thread pool to decouple the gRPC threads from disk I/O; that requires
+  initializing the thread pool at startup.
+
 ## Example Implementation
 
 Add a small logging setup module in the external gRPC server repository, for example `grpc_logging.cc`.
@@ -88,11 +123,13 @@ std::string FormatGrpcLogLine(const gpr_log_func_args* args) {
   using namespace std::chrono;
 
   const auto now = system_clock::now();
+  // Seconds and the sub-second fraction are both derived from the same `now`,
+  // so they stay consistent (glibc floors to_time_t to whole seconds).
   const auto micros =
       duration_cast<microseconds>(now.time_since_epoch()) % seconds(1);
   const std::time_t now_time = system_clock::to_time_t(now);
 
-  std::tm local_tm;
+  std::tm local_tm{};
 #if defined(_WIN32)
   localtime_s(&local_tm, &now_time);
 #else
